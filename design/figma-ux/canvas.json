@@ -1,0 +1,53 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": -500, "w": 900, "h": 360, "title": "Overview & Tenant Theming" },
+
+    { "file": "MenuBrowsing.dc.html", "x": 0, "y": 0, "w": 390, "h": 844, "title": "1. Menu Browsing", "is_interactive": true },
+    { "file": "Cart.dc.html", "x": 470, "y": 0, "w": 390, "h": 844, "title": "2. Cart" },
+    { "file": "Checkout.dc.html", "x": 940, "y": 0, "w": 390, "h": 844, "title": "3. Checkout" },
+    { "file": "OrderTracking.dc.html", "x": 1410, "y": 0, "w": 390, "h": 844, "title": "4. Order Tracking" },
+
+    { "file": "Dashboard.dc.html", "x": 0, "y": 994, "w": 1280, "h": 860, "title": "5. Admin — Dashboard" },
+    { "file": "MenuManagement.dc.html", "x": 1400, "y": 994, "w": 1280, "h": 860, "title": "6. Admin — Menu Management" },
+    { "file": "TableManagement.dc.html", "x": 2800, "y": 994, "w": 1280, "h": 860, "title": "7. Admin — Table Management" },
+
+    { "file": "StaffManagement.dc.html", "x": 0, "y": 2004, "w": 1280, "h": 860, "title": "8. Admin — Staff Management" },
+    { "file": "BrandingSettings.dc.html", "x": 1400, "y": 2004, "w": 1280, "h": 780, "title": "9. Admin — Branding Settings" },
+    { "file": "PaymentSettings.dc.html", "x": 2800, "y": 2004, "w": 1280, "h": 780, "title": "10. Admin — Payment Settings" },
+    { "file": "AdminKitchenView.dc.html", "x": 4200, "y": 994, "w": 1280, "h": 860, "title": "11. Admin — Kitchen Monitor" },
+    { "file": "KitchenDisplay.dc.html", "x": 4200, "y": 2004, "w": 1280, "h": 860, "title": "12. Kitchen Display (Tablet)" },
+
+    { "file": "DashboardMobile.dc.html", "x": 0, "y": 3014, "w": 390, "h": 844, "title": "13. Admin — Dashboard (Mobile)" },
+    { "file": "MenuBrowsingDesktop.dc.html", "x": 550, "y": 3014, "w": 1280, "h": 820, "title": "14. Customer — Menu Browsing (Desktop Web)", "is_interactive": true },
+
+    { "file": "Login.dc.html", "x": 0, "y": 3994, "w": 900, "h": 680, "title": "15. Login (shared pattern)" },
+    { "file": "QRLanding.dc.html", "x": 980, "y": 3994, "w": 390, "h": 844, "title": "16. Customer — QR Landing" },
+
+    { "file": "WaiterTables.dc.html", "x": 0, "y": 4988, "w": 390, "h": 844, "title": "17. Waiter — Tables" },
+    { "file": "WaiterOrders.dc.html", "x": 470, "y": 4988, "w": 390, "h": 844, "title": "18. Waiter — Orders" },
+
+    { "file": "AdminOrders.dc.html", "x": 0, "y": 5982, "w": 1280, "h": 860, "title": "19. Admin — Orders" },
+    { "file": "AdminBranches.dc.html", "x": 1400, "y": 5982, "w": 1280, "h": 860, "title": "20. Admin — Branches" },
+    { "file": "AdminReports.dc.html", "x": 2800, "y": 5982, "w": 1280, "h": 860, "title": "21. Admin — Reports" },
+    { "file": "AdminSettings.dc.html", "x": 4200, "y": 5982, "w": 1280, "h": 860, "title": "22. Admin — Settings" },
+
+    { "file": "PlatformDashboard.dc.html", "x": 0, "y": 6992, "w": 1280, "h": 860, "title": "23. Platform Admin — Dashboard" },
+    { "file": "PlatformTenants.dc.html", "x": 1400, "y": 6992, "w": 1280, "h": 860, "title": "24. Platform Admin — Tenants" },
+    { "file": "PlatformTenantDetail.dc.html", "x": 2800, "y": 6992, "w": 1280, "h": 860, "title": "25. Platform Admin — Tenant Detail" }
+  ],
+  "annotations": [
+    { "id": "group-customer", "x": 0, "y": -46, "w": 900, "text": "Customer app — Web (React PWA) + Mobile (Flutter), same backend and design system" },
+    { "id": "group-admin", "x": 0, "y": 950, "w": 900, "text": "Tenant Admin — desktop web console" },
+    { "id": "group-kitchen", "x": 4200, "y": 1960, "w": 900, "text": "Kitchen Display — order queue, run on a kitchen tablet" },
+    { "id": "note-cart-collapsed", "x": 420, "y": 700, "w": 220, "text": "The pill bar at the bottom of Menu Browsing is the collapsed cart. Tapping it opens the sheet shown here →" },
+    { "id": "group-responsive", "x": 0, "y": 2968, "w": 900, "text": "Responsive breakpoints — one example per surface, same pattern applies to every screen in that surface" },
+    { "id": "note-admin-mobile", "x": 0, "y": 3868, "w": 390, "text": "Admin at mobile width: the sidebar collapses into a top hamburger (opens the same nav as a drawer) plus a bottom bar for the 4 most-used sections. Stat grid goes 4→2 columns; the orders table becomes stacked cards. Every admin screen follows this same collapse." },
+    { "id": "note-customer-desktop", "x": 550, "y": 3844, "w": 1280, "text": "Customer flow at desktop width: content centers in a max-width column, the item grid goes 2→4 columns, and the sticky bottom cart bar becomes a header cart icon with a badge count. Same reflow applies to Cart, Checkout and Order Tracking." },
+
+    { "id": "group-auth", "x": 0, "y": 3948, "w": 900, "text": "Auth & entry — staff only. Same Login layout for Tenant Admin / Waiter / Kitchen sign-in, reached at each tenant's own /{tenantSlug}/...​/login URL so the branding here is resolved from the URL, never picked by the user (Platform Admin swaps the tenant logo for platform branding at its own unscoped /platform/login). Customer never sees a login screen — QR Landing → Menu is the entire entry flow, kiosk-style: no account, no password." },
+    { "id": "group-waiter", "x": 0, "y": 4942, "w": 900, "text": "Waiter app — mobile, branch-scoped (§6A.5)" },
+    { "id": "group-admin-more", "x": 0, "y": 5936, "w": 900, "text": "Tenant Admin, continued — Orders, Branches (§6A), Reports (§46), Settings (§30)" },
+    { "id": "group-platform", "x": 0, "y": 6946, "w": 900, "text": "Platform Admin — distinct indigo palette on purpose: this is Yummverse's own console, branded as Yummverse — never a tenant's colors" }
+  ],
+  "launch": { "view": "canvas" }
+}

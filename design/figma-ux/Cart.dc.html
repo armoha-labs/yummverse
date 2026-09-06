@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: oklch(97.5% 0.012 75);
+      --surface: oklch(99.2% 0.003 90);
+      --border: oklch(90% 0.02 70);
+      --text: oklch(23% 0.02 55);
+      --text-muted: oklch(50% 0.02 55);
+      --shadow-md: 0 -8px 30px oklch(20% 0 0 / 0.18);
+      --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+      --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+  </style>
+</helmet>
+<div style="width:390px; height:844px; background: var(--bg); font-family: var(--font-body); color: var(--text); position: relative; overflow: hidden; border-radius: 28px; border: 1px solid var(--border);">
+
+  <!-- Dimmed backdrop suggesting the menu screen behind -->
+  <div style="position:absolute; inset:0; padding:20px;">
+    <div style="height:38px; width:60%; background: var(--surface); border-radius:11px;"></div>
+    <div style="height:52px; margin-top:14px; width:100%; background: var(--surface); border-radius:14px;"></div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:16px;">
+      <div style="height:170px; background: var(--surface); border-radius:16px;"></div>
+      <div style="height:170px; background: var(--surface); border-radius:16px;"></div>
+    </div>
+  </div>
+  <div style="position:absolute; inset:0; background: oklch(20% 0.01 55 / 0.5);"></div>
+
+  <!-- Sheet -->
+  <div style="position:absolute; left:0; right:0; bottom:0; height:600px; background: var(--surface); border-radius:24px 24px 0 0; box-shadow: var(--shadow-md); display:flex; flex-direction:column;">
+
+    <div style="display:flex; justify-content:center; padding-top:10px;">
+      <div style="width:38px; height:4px; border-radius:999px; background: var(--border);"></div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 22px 4px;">
+      <div style="font-family: var(--font-display); font-weight:800; font-size:18px;">Your Order</div>
+      <div style="font-size:13px; color: var(--text-muted);">Table 12</div>
+    </div>
+
+    <div style="flex:1; overflow:hidden; padding:14px 22px; display:flex; flex-direction:column; gap:16px;">
+
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div style="width:56px; height:56px; border-radius:12px; background: linear-gradient(135deg, oklch(80% 0.09 45), oklch(68% 0.12 35)); flex:0 0 auto;"></div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:600; font-size:14px;">Cappuccino</div>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:2px;">Less sugar</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+          <div style="font-weight:700; font-size:13.5px;">₹300</div>
+          <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:999px; padding:4px 8px;">
+            <span style="font-size:14px; color: var(--text-muted);">&minus;</span>
+            <span style="font-size:13px; font-weight:600; min-width:10px; text-align:center;">2</span>
+            <span style="font-size:14px;">+</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:1px; background: var(--border);"></div>
+
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div style="width:56px; height:56px; border-radius:12px; background: linear-gradient(135deg, oklch(88% 0.05 95), oklch(78% 0.08 85)); flex:0 0 auto;"></div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:600; font-size:14px;">Croissant</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+          <div style="font-weight:700; font-size:13.5px;">₹90</div>
+          <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:999px; padding:4px 8px;">
+            <span style="font-size:14px; color: var(--text-muted);">&minus;</span>
+            <span style="font-size:13px; font-weight:600; min-width:10px; text-align:center;">1</span>
+            <span style="font-size:14px;">+</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:1px; background: var(--border);"></div>
+
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div style="width:56px; height:56px; border-radius:12px; background: linear-gradient(135deg, oklch(78% 0.1 60), oklch(66% 0.13 40)); flex:0 0 auto;"></div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:600; font-size:14px;">Iced Latte</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+          <div style="font-weight:700; font-size:13.5px;">₹180</div>
+          <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:999px; padding:4px 8px;">
+            <span style="font-size:14px; color: var(--text-muted);">&minus;</span>
+            <span style="font-size:13px; font-weight:600; min-width:10px; text-align:center;">1</span>
+            <span style="font-size:14px;">+</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="padding:16px 22px 26px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:14px;">
+      <div style="display:flex; justify-content:space-between; font-size:14px; color: var(--text-muted);">
+        <span>Subtotal</span>
+        <span style="color: var(--text); font-weight:600;">₹570</span>
+      </div>
+      <div style="width:100%; height:56px; border-radius:999px; background:{{accent}}; color:white; display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight:700; font-size:15px; box-shadow: 0 10px 26px oklch(20% 0 0 / 0.14);">
+        Checkout &middot; ₹570
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"oklch(58% 0.15 40)","options":["oklch(58% 0.15 40)","oklch(55% 0.16 145)","oklch(55% 0.17 260)","oklch(60% 0.18 25)"],"section":"Tenant theme"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? 'oklch(58% 0.15 40)' };
+  }
+}
+</script>
+</body>
+</html>

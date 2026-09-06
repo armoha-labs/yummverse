@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: oklch(97.5% 0.012 75);
+      --surface: oklch(99.2% 0.003 90);
+      --border: oklch(90% 0.02 70);
+      --text: oklch(23% 0.02 55);
+      --text-muted: oklch(50% 0.02 55);
+      --accent: oklch(58% 0.15 40);
+      --success: oklch(62% 0.14 150);
+      --success-soft: oklch(94% 0.05 150);
+      --secondary-soft: oklch(94% 0.05 75);
+      --sidebar-bg: oklch(24% 0.018 55);
+      --sidebar-muted: oklch(58% 0.02 70);
+      --shadow-sm: 0 1px 2px oklch(20% 0 0 / 0.06);
+      --shadow-md: 0 14px 34px oklch(20% 0 0 / 0.16);
+      --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+      --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+  </style>
+</helmet>
+<div style="width:1280px; height:860px; background: var(--bg); font-family: var(--font-body); color: var(--text); display:flex; overflow:hidden; border-radius:16px; border:1px solid var(--border); position:relative;">
+
+  <!-- Sidebar -->
+  <div style="width:240px; flex:0 0 auto; background: var(--sidebar-bg); color: var(--sidebar-muted); display:flex; flex-direction:column; padding:22px 16px;">
+    <div style="display:flex; align-items:center; gap:10px; padding:0 8px 22px;">
+      <div style="width:32px; height:32px; border-radius:9px; background: var(--accent); color:white; display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight:800; font-size:13px;">GL</div>
+      <div style="font-family: var(--font-display); font-weight:700; font-size:14.5px; color:white;">Green Leaf Café</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:2px; font-size:13.5px;">
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 6l1.5 12a2 2 0 0 0 2 1.8h9a2 2 0 0 0 2-1.8L20 6M9 10v5M15 10v5"/></svg>Orders</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21h16"/><path d="M6 21V8a6 6 0 0 1 12 0v13"/><path d="M6 12h12"/></svg>Kitchen</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V6a2 2 0 0 1 2-2h13v16H6a2 2 0 0 1-2-2Z"/><path d="M8 7h7M8 11h7"/></svg>Menu</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:10px; background: oklch(100% 0 0 / 0.1); color:white; font-weight:600;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h3V8M15 8v12h3a1 1 0 0 0 1-1V8"/></svg>Tables</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/></svg>Branches</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Staff</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Payments</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>Reports</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.36.4.66.73.86"/></svg>Settings</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div style="flex:1; overflow:hidden; padding:28px 32px; display:flex; flex-direction:column; gap:18px;">
+
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <div style="font-family: var(--font-display); font-weight:800; font-size:22px;">Tables</div>
+      <div style="display:flex; gap:10px;">
+        <div style="background: var(--surface); border:1px solid var(--border); border-radius:10px; padding:9px 15px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:7px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Download All QR Codes
+        </div>
+        <div style="background: var(--accent); color:white; border-radius:10px; padding:9px 16px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Add Table
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:16px; align-content:start;">
+
+      <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow: var(--shadow-sm); display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family: var(--font-display); font-weight:700; font-size:15px;">Table 1</div>
+          <span style="font-size:11px; font-weight:700; color: oklch(38% 0.1 150); background: var(--success-soft); padding:4px 9px; border-radius:999px;">Available</span>
+        </div>
+        <div style="font-size:12px; color: var(--text-muted);">No active order</div>
+        <div style="height:1px; background: var(--border); margin:2px 0;"></div>
+        <div style="display:flex; gap:8px; color: var(--text-muted);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20v.01"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+      </div>
+
+      <div style="background: var(--surface); border:2px solid var(--accent); border-radius:14px; padding:16px; box-shadow: var(--shadow-md); display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family: var(--font-display); font-weight:700; font-size:15px;">Table 2</div>
+          <span style="font-size:11px; font-weight:700; color: oklch(45% 0.1 75); background: var(--secondary-soft); padding:4px 9px; border-radius:999px;">Occupied</span>
+        </div>
+        <div style="font-size:12px; color: var(--text-muted);">Order #1042 in progress</div>
+        <div style="height:1px; background: var(--border); margin:2px 0;"></div>
+        <div style="display:flex; gap:8px; color: var(--accent);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20v.01"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+      </div>
+
+      <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow: var(--shadow-sm); display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family: var(--font-display); font-weight:700; font-size:15px;">Table 3</div>
+          <span style="font-size:11px; font-weight:700; color: oklch(38% 0.1 150); background: var(--success-soft); padding:4px 9px; border-radius:999px;">Available</span>
+        </div>
+        <div style="font-size:12px; color: var(--text-muted);">No active order</div>
+        <div style="height:1px; background: var(--border); margin:2px 0;"></div>
+        <div style="display:flex; gap:8px; color: var(--text-muted);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20v.01"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+      </div>
+
+      <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow: var(--shadow-sm); display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family: var(--font-display); font-weight:700; font-size:15px;">Table 4</div>
+          <span style="font-size:11px; font-weight:700; color: oklch(45% 0.1 75); background: var(--secondary-soft); padding:4px 9px; border-radius:999px;">Occupied</span>
+        </div>
+        <div style="font-size:12px; color: var(--text-muted);">Order #1041 ready</div>
+        <div style="height:1px; background: var(--border); margin:2px 0;"></div>
+        <div style="display:flex; gap:8px; color: var(--text-muted);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20v.01"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- QR detail overlay panel (Table 2 selected) -->
+  <div style="position:absolute; top:24px; right:24px; width:300px; background: var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow: var(--shadow-md); padding:22px; display:flex; flex-direction:column; align-items:center; gap:14px;">
+    <div style="font-family: var(--font-display); font-weight:700; font-size:13.5px; align-self:flex-start;">Table 2 &middot; QR Code</div>
+    <div style="width:190px; height:190px; background:white; border:1px solid var(--border); border-radius:12px; display:flex; align-items:center; justify-content:center; position:relative;">
+      <svg width="150" height="150" viewBox="0 0 100 100">
+        <rect width="100" height="100" fill="white"/>
+        <rect x="6" y="6" width="24" height="24" fill="none" stroke="black" stroke-width="4"/>
+        <rect x="13" y="13" width="10" height="10" fill="black"/>
+        <rect x="70" y="6" width="24" height="24" fill="none" stroke="black" stroke-width="4"/>
+        <rect x="77" y="13" width="10" height="10" fill="black"/>
+        <rect x="6" y="70" width="24" height="24" fill="none" stroke="black" stroke-width="4"/>
+        <rect x="13" y="77" width="10" height="10" fill="black"/>
+        <rect x="40" y="10" width="6" height="6" fill="black"/><rect x="50" y="10" width="6" height="6" fill="black"/>
+        <rect x="40" y="40" width="6" height="6" fill="black"/><rect x="54" y="40" width="6" height="6" fill="black"/>
+        <rect x="66" y="46" width="6" height="6" fill="black"/><rect x="40" y="54" width="6" height="6" fill="black"/>
+        <rect x="60" y="60" width="6" height="6" fill="black"/><rect x="74" y="60" width="6" height="6" fill="black"/>
+        <rect x="40" y="70" width="6" height="6" fill="black"/><rect x="52" y="76" width="6" height="6" fill="black"/>
+        <rect x="66" y="80" width="6" height="6" fill="black"/><rect x="80" y="70" width="6" height="6" fill="black"/>
+      </svg>
+      <div style="position:absolute; width:34px; height:34px; border-radius:8px; background:{{accent}}; color:white; display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight:800; font-size:12px; border:3px solid white;">GL</div>
+    </div>
+    <div style="font-size:12px; color: var(--text-muted); text-align:center;">Scan to open Green Leaf Café&rsquo;s menu for Table 2</div>
+    <div style="display:flex; gap:8px; width:100%;">
+      <div style="flex:1; text-align:center; padding:9px 0; border-radius:999px; border:1px solid var(--border); font-size:12px; font-weight:600;">Regenerate</div>
+      <div style="flex:1; text-align:center; padding:9px 0; border-radius:999px; background:{{accent}}; color:white; font-size:12px; font-weight:700;">Download</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"oklch(58% 0.15 40)","options":["oklch(58% 0.15 40)","oklch(55% 0.16 145)","oklch(55% 0.17 260)","oklch(60% 0.18 25)"],"section":"Tenant theme"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? 'oklch(58% 0.15 40)' };
+  }
+}
+</script>
+</body>
+</html>

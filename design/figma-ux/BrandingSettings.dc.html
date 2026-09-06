@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: oklch(97.5% 0.012 75);
+      --surface: oklch(99.2% 0.003 90);
+      --border: oklch(90% 0.02 70);
+      --text: oklch(23% 0.02 55);
+      --text-muted: oklch(50% 0.02 55);
+      --accent: oklch(58% 0.15 40);
+      --secondary: oklch(72% 0.13 75);
+      --sidebar-bg: oklch(24% 0.018 55);
+      --sidebar-muted: oklch(58% 0.02 70);
+      --shadow-sm: 0 1px 2px oklch(20% 0 0 / 0.06);
+      --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+      --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+  </style>
+</helmet>
+<div style="width:1280px; height:780px; background: var(--bg); font-family: var(--font-body); color: var(--text); display:flex; overflow:hidden; border-radius:16px; border:1px solid var(--border);">
+
+  <!-- Sidebar -->
+  <div style="width:240px; flex:0 0 auto; background: var(--sidebar-bg); color: var(--sidebar-muted); display:flex; flex-direction:column; padding:22px 16px;">
+    <div style="display:flex; align-items:center; gap:10px; padding:0 8px 22px;">
+      <div style="width:32px; height:32px; border-radius:9px; background: var(--accent); color:white; display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight:800; font-size:13px;">GL</div>
+      <div style="font-family: var(--font-display); font-weight:700; font-size:14.5px; color:white;">Green Leaf Café</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:2px; font-size:13.5px;">
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 6l1.5 12a2 2 0 0 0 2 1.8h9a2 2 0 0 0 2-1.8L20 6M9 10v5M15 10v5"/></svg>Orders</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21h16"/><path d="M6 21V8a6 6 0 0 1 12 0v13"/><path d="M6 12h12"/></svg>Kitchen</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V6a2 2 0 0 1 2-2h13v16H6a2 2 0 0 1-2-2Z"/><path d="M8 7h7M8 11h7"/></svg>Menu</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h3V8M15 8v12h3a1 1 0 0 0 1-1V8"/></svg>Tables</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/></svg>Branches</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Staff</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Payments</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>Reports</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:10px; background: oklch(100% 0 0 / 0.1); color:white; font-weight:600;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.36.4.66.73.86"/></svg>Settings</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div style="flex:1; overflow:hidden; padding:28px 32px; display:flex; flex-direction:column; gap:18px;">
+
+    <div>
+      <div style="font-size:12.5px; color: var(--text-muted); margin-bottom:4px;">Settings</div>
+      <div style="font-family: var(--font-display); font-weight:800; font-size:22px;">Branding</div>
+    </div>
+
+    <div style="display:flex; gap:24px; flex:1; overflow:hidden;">
+
+      <div style="flex:1.4; display:flex; flex-direction:column; gap:18px; overflow:hidden;">
+
+        <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; box-shadow: var(--shadow-sm); display:flex; gap:20px; align-items:center;">
+          <div style="width:88px; height:88px; border-radius:16px; background:{{accent}}; color:white; display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight:800; font-size:28px; flex:0 0 auto;">GL</div>
+          <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+            <div style="font-family: var(--font-display); font-weight:700; font-size:14px;">Café Logo</div>
+            <div style="border:1.5px dashed var(--border); border-radius:10px; padding:14px; display:flex; align-items:center; gap:10px; color: var(--text-muted); font-size:12.5px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+              Drag &amp; drop or click to upload &middot; PNG/SVG, max 2MB
+            </div>
+            <div style="display:flex; gap:10px;">
+              <div style="font-size:12px; font-weight:600; color: var(--accent);">Replace</div>
+              <div style="font-size:12px; font-weight:600; color: var(--text-muted);">Remove</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; box-shadow: var(--shadow-sm); display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="font-family: var(--font-display); font-weight:700; font-size:14px;">Primary Color</div>
+              <div style="font-size:12px; color: var(--text-muted); margin-top:2px;">Buttons, active states, CTAs</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:34px; height:34px; border-radius:9px; background:{{accent}}; border:1px solid var(--border);"></div>
+              <div style="background: var(--bg); border:1px solid var(--border); border-radius:9px; padding:8px 12px; font-size:12.5px; font-family: monospace; white-space:nowrap;">{{accent}}</div>
+            </div>
+          </div>
+          <div style="height:1px; background: var(--border);"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="font-family: var(--font-display); font-weight:700; font-size:14px;">Secondary Color</div>
+              <div style="font-size:12px; color: var(--text-muted); margin-top:2px;">Accents &amp; highlights</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:34px; height:34px; border-radius:9px; background: var(--secondary); border:1px solid var(--border);"></div>
+              <div style="background: var(--bg); border:1px solid var(--border); border-radius:9px; padding:8px 12px; font-size:12.5px; font-family: monospace;">#E8AF5C</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; box-shadow: var(--shadow-sm); display:flex; align-items:center; gap:16px;">
+          <div style="width:44px; height:44px; border-radius:10px; background:{{accent}}; flex:0 0 auto;"></div>
+          <div style="flex:1;">
+            <div style="font-family: var(--font-display); font-weight:700; font-size:14px;">Favicon</div>
+            <div style="font-size:12px; color: var(--text-muted); margin-top:2px;">Shown in browser tabs on the ordering page</div>
+          </div>
+          <div style="font-size:12px; font-weight:600; color: var(--accent);">Upload</div>
+        </div>
+
+        <div style="margin-top:auto; align-self:flex-start; padding:12px 28px; border-radius:999px; background:{{accent}}; color:white; font-family: var(--font-display); font-weight:700; font-size:13.5px;">Save Branding</div>
+      </div>
+
+      <!-- Live preview -->
+      <div style="flex:1; background: var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow: var(--shadow-sm); padding:22px; display:flex; flex-direction:column; gap:14px;">
+        <div style="font-family: var(--font-display); font-weight:700; font-size:13.5px; color: var(--text-muted);">Live Preview &middot; Customer Menu</div>
+        <div style="flex:1; background: var(--bg); border-radius:16px; padding:16px; display:flex; flex-direction:column; align-items:center;">
+          <div style="width:220px; background:white; border-radius:20px; border:1px solid var(--border); box-shadow: 0 10px 26px oklch(20% 0 0 / 0.1); overflow:hidden;">
+            <div style="padding:16px 14px 10px; display:flex; align-items:center; gap:8px;">
+              <div style="width:26px; height:26px; border-radius:8px; background:{{accent}}; color:white; display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight:800; font-size:10px;">GL</div>
+              <div style="font-family: var(--font-display); font-weight:700; font-size:11.5px;">Green Leaf Café</div>
+            </div>
+            <div style="display:flex; gap:6px; padding:2px 14px 12px;">
+              <div style="padding:5px 11px; border-radius:999px; background:{{accent}}; color:white; font-size:9.5px; font-weight:700;">All</div>
+              <div style="padding:5px 11px; border-radius:999px; border:1px solid var(--border); color: var(--text-muted); font-size:9.5px; font-weight:600;">Coffee</div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 14px 16px;">
+              <div style="height:56px; border-radius:9px; background: linear-gradient(135deg, oklch(80% 0.09 45), oklch(68% 0.12 35));"></div>
+              <div style="height:56px; border-radius:9px; background: linear-gradient(135deg, oklch(88% 0.05 95), oklch(78% 0.08 85));"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"oklch(58% 0.15 40)","options":["oklch(58% 0.15 40)","oklch(55% 0.16 145)","oklch(55% 0.17 260)","oklch(60% 0.18 25)"],"section":"Tenant theme"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? 'oklch(58% 0.15 40)' };
+  }
+}
+</script>
+</body>
+</html>

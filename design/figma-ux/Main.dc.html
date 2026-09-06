@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: oklch(97.5% 0.012 75);
+      --surface: oklch(99.2% 0.003 90);
+      --border: oklch(90% 0.02 70);
+      --text: oklch(23% 0.02 55);
+      --text-muted: oklch(50% 0.02 55);
+      --accent: oklch(58% 0.15 40);
+      --accent-soft: oklch(93% 0.045 40);
+      --secondary: oklch(72% 0.13 75);
+      --secondary-soft: oklch(94% 0.05 75);
+      --shadow-md: 0 8px 24px oklch(20% 0 0 / 0.10), 0 2px 6px oklch(20% 0 0 / 0.06);
+      --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+      --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    a { color: var(--accent); }
+    a:hover { color: oklch(48% 0.15 40); }
+  </style>
+</helmet>
+<div style="width:900px; min-height:340px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-md); font-family: var(--font-body); color: var(--text); padding: 44px 48px; display: flex; flex-direction: column; gap: 24px;">
+
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div style="width:36px; height:36px; border-radius:10px; background: var(--accent); display:flex; align-items:center; justify-content:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h15a3 3 0 0 1 0 6h-1"/><path d="M3 8v8a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-2"/><path d="M6 3c0 1-1 1-1 2s1 1 1 2"/><path d="M10 3c0 1-1 1-1 2s1 1 1 2"/></svg>
+      </div>
+      <div style="font-family: var(--font-display); font-weight:800; font-size:15px; letter-spacing:0.02em; text-transform:uppercase; color: var(--text-muted);">Yummverse &middot; UX Design</div>
+    </div>
+    <div style="font-family: var(--font-display); font-weight:800; font-size:34px; line-height:1.15;">Yummverse</div>
+    <div style="font-size:14px; color: var(--text-muted); margin-top:-14px;">Multi-Tenant Café Ordering &amp; Payment SaaS</div>
+    <div style="font-size:15px; line-height:1.6; color: var(--text-muted); max-width:640px;">Every screen in the product: Customer ordering (web + mobile), Tenant Admin (Dashboard, Orders, Kitchen monitor, Menu, Tables, Branches, Staff, Payments, Reports, Settings), the Waiter app, the Kitchen tablet display, auth, and Platform Admin — Yummverse's own console, branded as Yummverse itself rather than any tenant's colors. Responsive breakpoints are shown for both the customer flow and Admin. 25 screens follow this cover, grouped left→right, top→bottom.</div>
+  </div>
+
+  <div style="height:1px; background: var(--border);"></div>
+
+  <div style="display:flex; flex-direction:column; gap:14px;">
+    <div style="font-family: var(--font-display); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.04em; color: var(--text-muted);">Per-tenant theming</div>
+    <div style="display:flex; align-items:center; gap:28px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:48px; height:48px; border-radius:12px; background: var(--accent); box-shadow: var(--shadow-md);"></div>
+        <div>
+          <div style="font-weight:600; font-size:14px;">Tenant Primary</div>
+          <div style="font-size:12.5px; color: var(--text-muted);">Buttons, active states, CTAs</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:48px; height:48px; border-radius:12px; background: var(--secondary); box-shadow: var(--shadow-md);"></div>
+        <div>
+          <div style="font-weight:600; font-size:14px;">Tenant Secondary</div>
+          <div style="font-size:12.5px; color: var(--text-muted);">Accents, highlights</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:48px; height:48px; border-radius:12px; background: var(--surface); border: 1.5px dashed var(--border); display:flex; align-items:center; justify-content:center; color: var(--text-muted);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:600; font-size:14px;">Tenant Logo</div>
+          <div style="font-size:12.5px; color: var(--text-muted);">Header, splash, receipts</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:13px; color: var(--text-muted); background: var(--accent-soft); border-radius:10px; padding:10px 14px;">Configured once in Admin → Branding Settings, applied automatically across web, mobile, the admin console, the waiter app and the kitchen display. Every café-branded screen carries a live color tweak — try them. Platform Admin (bottom of the canvas) is the one exception: it's the SaaS operator's own console, so it uses a fixed indigo palette instead of the tenant's colors.</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

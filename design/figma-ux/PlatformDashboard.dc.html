@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: oklch(97% 0.006 260);
+      --surface: oklch(99% 0.002 260);
+      --border: oklch(89% 0.012 260);
+      --text: oklch(22% 0.02 260);
+      --text-muted: oklch(50% 0.015 260);
+      --accent: oklch(52% 0.16 265);
+      --accent-soft: oklch(93% 0.035 265);
+      --success: oklch(62% 0.14 150);
+      --success-soft: oklch(94% 0.05 150);
+      --warn-soft: oklch(94% 0.06 75);
+      --sidebar-bg: oklch(16% 0.025 260);
+      --sidebar-muted: oklch(58% 0.015 260);
+      --shadow-sm: 0 1px 2px oklch(20% 0 0 / 0.06);
+      --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+      --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+  </style>
+</helmet>
+<div style="width:1280px; height:860px; background: var(--bg); font-family: var(--font-body); color: var(--text); display:flex; overflow:hidden; border-radius:16px; border:1px solid var(--border);">
+
+  <div style="width:240px; flex:0 0 auto; background: var(--sidebar-bg); color: var(--sidebar-muted); display:flex; flex-direction:column; padding:22px 16px;">
+    <div style="display:flex; align-items:center; gap:10px; padding:0 8px 22px;">
+      <div style="width:32px; height:32px; border-radius:9px; background: var(--accent); color:white; display:flex; align-items:center; justify-content:center;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <div style="font-family: var(--font-display); font-weight:700; font-size:14.5px; color:white;">Yummverse</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:2px; font-size:13.5px;">
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:10px; background: oklch(100% 0 0 / 0.1); color:white; font-weight:600;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/></svg>Tenants</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Subscriptions</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:11px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.36.4.66.73.86"/></svg>Platform Settings</div>
+    </div>
+  </div>
+
+  <div style="flex:1; overflow:hidden; padding:28px 32px; display:flex; flex-direction:column; gap:22px;">
+
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <div style="font-family: var(--font-display); font-weight:800; font-size:22px;">Platform Dashboard</div>
+      <div style="font-size:13px; color: var(--text-muted);">Signed in as Platform Admin</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:18px;">
+      <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow: var(--shadow-sm);">
+        <div style="font-size:12.5px; color: var(--text-muted); font-weight:600;">Active Tenants</div>
+        <div style="font-family: var(--font-display); font-weight:800; font-size:26px; margin-top:8px;">86</div>
+        <div style="font-size:12px; color: var(--success); margin-top:4px; font-weight:600;">↑ 4 this month</div>
+      </div>
+      <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow: var(--shadow-sm);">
+        <div style="font-size:12.5px; color: var(--text-muted); font-weight:600;">MRR</div>
+        <div style="font-family: var(--font-display); font-weight:800; font-size:26px; margin-top:8px;">₹7,42,000</div>
+        <div style="font-size:12px; color: var(--success); margin-top:4px; font-weight:600;">↑ 9% vs last month</div>
+      </div>
+      <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow: var(--shadow-sm);">
+        <div style="font-size:12.5px; color: var(--text-muted); font-weight:600;">Orders Today (all tenants)</div>
+        <div style="font-family: var(--font-display); font-weight:800; font-size:26px; margin-top:8px;">6,214</div>
+        <div style="font-size:12px; color: var(--text-muted); margin-top:4px;">Across 86 tenants</div>
+      </div>
+      <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow: var(--shadow-sm);">
+        <div style="font-size:12.5px; color: var(--text-muted); font-weight:600;">Trial → Paid Conversion</div>
+        <div style="font-family: var(--font-display); font-weight:800; font-size:26px; margin-top:8px;">38%</div>
+        <div style="font-size:12px; color: var(--text-muted); margin-top:4px;">Last 30 days</div>
+      </div>
+    </div>
+
+    <div style="background: var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow: var(--shadow-sm); flex:1; overflow:hidden; display:flex; flex-direction:column;">
+      <div style="padding:16px 20px; font-family: var(--font-display); font-weight:700; font-size:14.5px; border-bottom:1px solid var(--border);">Recent Tenant Activity</div>
+      <div style="display:grid; grid-template-columns: 1fr 140px 120px 140px; padding:10px 20px; font-size:11px; font-weight:700; color: var(--text-muted); text-transform:uppercase; letter-spacing:0.02em;">
+        <div>Tenant</div><div>Plan</div><div>Status</div><div>Event</div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 140px 120px 140px; padding:13px 20px; align-items:center; border-top:1px solid var(--border); font-size:13px;">
+        <div style="font-weight:600;">Green Leaf Café</div><div style="color: var(--text-muted);">PRO</div>
+        <div><span style="background: var(--success-soft); color: oklch(38% 0.1 150); font-size:11px; font-weight:700; padding:5px 10px; border-radius:999px;">Active</span></div>
+        <div style="color: var(--text-muted);">Added Branch</div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 140px 120px 140px; padding:13px 20px; align-items:center; border-top:1px solid var(--border); font-size:13px;">
+        <div style="font-weight:600;">Blue Bottle Café</div><div style="color: var(--text-muted);">STARTER</div>
+        <div><span style="background: var(--warn-soft); color: oklch(45% 0.1 75); font-size:11px; font-weight:700; padding:5px 10px; border-radius:999px;">Trial</span></div>
+        <div style="color: var(--text-muted);">Signed Up</div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 140px 120px 140px; padding:13px 20px; align-items:center; border-top:1px solid var(--border); font-size:13px;">
+        <div style="font-weight:600;">Urban Brew</div><div style="color: var(--text-muted);">ENTERPRISE</div>
+        <div><span style="background: var(--success-soft); color: oklch(38% 0.1 150); font-size:11px; font-weight:700; padding:5px 10px; border-radius:999px;">Active</span></div>
+        <div style="color: var(--text-muted);">Limit Override Set</div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 140px 120px 140px; padding:13px 20px; align-items:center; border-top:1px solid var(--border); font-size:13px; opacity:0.6;">
+        <div style="font-weight:600;">Cafe Del Sol</div><div style="color: var(--text-muted);">FREE</div>
+        <div><span style="background: var(--bg); border:1px solid var(--border); color: var(--text-muted); font-size:11px; font-weight:700; padding:5px 10px; border-radius:999px;">Suspended</span></div>
+        <div style="color: var(--text-muted);">Payment overdue</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

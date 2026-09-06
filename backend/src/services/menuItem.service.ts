@@ -1,0 +1,164 @@
+import { menuItemRepository } from "../repositories/menuItem.repository.js";
+import { categoryRepository } from "../repositories/category.repository.js";
+import { branchRepository } from "../repositories/branch.repository.js";
+import { branchMenuOverrideRepository } from "../repositories/branchMenuOverride.repository.js";
+import { auditService, type AuditContext } from "./audit.service.js";
+import { ApiError } from "../utils/ApiError.js";
+import { realtimeEvents } from "../sockets/realtimeEvents.js";
+
+type Actor = Omit<AuditContext, "actorType" | "actorId" | "tenantId"> & { actorId: string };
+
+async function assertCategoryBelongsToTenant(tenantId: string, categoryId: string) {
+  const category = await categoryRepository.findById(tenantId, categoryId);
+  if (!category) throw ApiError.notFound("CATEGORY_NOT_FOUND", "Category not found.");
+}
+
+export const menuItemService = {
+  listForTenant(tenantId: string, filters?: { categoryId?: string; includeInactive?: boolean }) {
+    return menuItemRepository.listForTenant(tenantId, filters);
+  },
+
+  async create(
+    tenantId: string,
+    input: { categoryId: string; name: string; description?: string; price: number; taxPercentage?: number },
+    actor: Actor,
+  ) {
+    await assertCategoryBelongsToTenant(tenantId, input.categoryId);
+
+    const item = await menuItemRepository.create({ ...input, tenantId });
+
+    await auditService.record({
+      tenantId,
+      actorType: "USER",
+      actorId: actor.actorId,
+      action: "MENU_ITEM_CREATED",
+      entityType: "MenuItem",
+      entityId: item._id,
+      ipAddress: actor.ipAddress,
+      userAgent: actor.userAgent,
+    });
+
+    return item;
+  },
+
+  async update(
+    tenantId: string,
+    menuItemId: string,
+    updates: {
+      name?: string;
+      description?: string;
+      imageUrl?: string;
+      categoryId?: string;
+      price?: number;
+      taxPercentage?: number;
+      active?: boolean;
+    },
+    actor: Actor,
+  ) {
+    const item = await menuItemRepository.findById(tenantId, menuItemId);
+    if (!item) throw ApiError.notFound("MENU_ITEM_NOT_FOUND", "Menu item not found.");
+
+    if (updates.categoryId !== undefined) {
+      await assertCategoryBelongsToTenant(tenantId, updates.categoryId);
+      item.categoryId = updates.categoryId as never;
+    }
+    const priceChanged = updates.price !== undefined && updates.price !== item.price;
+
+    if (updates.name !== undefined) item.name = updates.name;
+    if (updates.description !== undefined) item.description = updates.description;
+    if (updates.imageUrl !== undefined) item.imageUrl = updates.imageUrl;
+    if (updates.price !== undefined) item.price = updates.price;
+    if (updates.taxPercentage !== undefined) item.taxPercentage = updates.taxPercentage;
+    if (updates.active !== undefined) item.active = updates.active;
+    await item.save();
+
+    await auditService.record({
+      tenantId,
+      actorType: "USER",
+      actorId: actor.actorId,
+      action: "MENU_ITEM_UPDATED",
+      entityType: "MenuItem",
+      entityId: item._id,
+      ipAddress: actor.ipAddress,
+      userAgent: actor.userAgent,
+    });
+
+    if (priceChanged) {
+      await auditService.record({
+        tenantId,
+        actorType: "USER",
+        actorId: actor.actorId,
+        action: "PRICE_CHANGED",
+        entityType: "MenuItem",
+        entityId: item._id,
+        ipAddress: actor.ipAddress,
+        userAgent: actor.userAgent,
+      });
+    }
+
+    return item;
+  },
+
+  async setAvailability(tenantId: string, menuItemId: string, isAvailable: boolean, actor: Actor) {
+    const item = await menuItemRepository.findById(tenantId, menuItemId);
+    if (!item) throw ApiError.notFound("MENU_ITEM_NOT_FOUND", "Menu item not found.");
+
+    item.isAvailable = isAvailable;
+    await item.save();
+
+    await auditService.record({
+      tenantId,
+      actorType: "USER",
+      actorId: actor.actorId,
+      action: "MENU_ITEM_AVAILABILITY_CHANGED",
+      entityType: "MenuItem",
+      entityId: item._id,
+      ipAddress: actor.ipAddress,
+      userAgent: actor.userAgent,
+    });
+    realtimeEvents.menuAvailabilityChanged(tenantId, item);
+
+    return item;
+  },
+
+  async delete(tenantId: string, menuItemId: string, actor: Actor) {
+    const item = await menuItemRepository.findById(tenantId, menuItemId);
+    if (!item) throw ApiError.notFound("MENU_ITEM_NOT_FOUND", "Menu item not found.");
+
+    await menuItemRepository.delete(tenantId, menuItemId);
+
+    await auditService.record({
+      tenantId,
+      actorType: "USER",
+      actorId: actor.actorId,
+      action: "MENU_ITEM_UPDATED",
+      entityType: "MenuItem",
+      entityId: item._id,
+      ipAddress: actor.ipAddress,
+      userAgent: actor.userAgent,
+    });
+  },
+
+  reorder(tenantId: string, orderedIds: string[]) {
+    return menuItemRepository.reorder(tenantId, orderedIds);
+  },
+
+  async getBranchOverrides(tenantId: string, menuItemId: string) {
+    const item = await menuItemRepository.findById(tenantId, menuItemId);
+    if (!item) throw ApiError.notFound("MENU_ITEM_NOT_FOUND", "Menu item not found.");
+    return branchMenuOverrideRepository.listForMenuItem(tenantId, menuItemId);
+  },
+
+  async setBranchOverride(tenantId: string, menuItemId: string, branchId: string, isAvailable: boolean) {
+    const [item, branch] = await Promise.all([
+      menuItemRepository.findById(tenantId, menuItemId),
+      branchRepository.findById(tenantId, branchId),
+    ]);
+    if (!item) throw ApiError.notFound("MENU_ITEM_NOT_FOUND", "Menu item not found.");
+    if (!branch) throw ApiError.notFound("BRANCH_NOT_FOUND", "Branch not found.");
+
+    const override = await branchMenuOverrideRepository.upsert(tenantId, branchId, menuItemId, isAvailable);
+    realtimeEvents.menuAvailabilityChanged(tenantId, { menuItemId, branchId, isAvailable });
+    return override;
+  },
+};
