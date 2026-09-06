@@ -1,5 +1,9 @@
 import { tokenStore } from "./tokenStore";
 
+/** Backend origin for a separately-deployed web build (e.g. Vercel + Render) — empty in
+ * local dev, where requests stay relative and Vite's dev-server proxy forwards them. */
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
+
 export class ApiError extends Error {
   status: number;
   code: string;
@@ -23,7 +27,7 @@ async function doRefresh(): Promise<void> {
   const auth = tokenStore.get();
   if (!auth?.refreshToken) throw new ApiError(401, "NO_REFRESH_TOKEN", "Not authenticated.");
 
-  const res = await fetch("/api/v1/auth/refresh", {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refreshToken: auth.refreshToken }),
@@ -47,7 +51,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}, allow
   }
   if (auth?.accessToken) headers.set("Authorization", `Bearer ${auth.accessToken}`);
 
-  const res = await fetch(`/api/v1${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE_URL}/api/v1${path}`, { ...options, headers });
 
   if (res.status === 401 && allowRetry && auth?.refreshToken) {
     refreshPromise ??= doRefresh().finally(() => {

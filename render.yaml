@@ -1,0 +1,59 @@
+services:
+  - type: web
+    name: yummverse-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    # --include=dev is explicit here on purpose: @types/node and typescript are
+    # devDependencies, needed only for this build step (tsc), not at runtime. Render's
+    # default `npm install` normally includes them anyway on modern npm, but this removes
+    # any doubt if a stricter install mode is ever configured.
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # PORT is intentionally not set — Render injects its own and the app already reads
+      # process.env.PORT (backend/src/config/env.ts).
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: ACCESS_TOKEN_TTL
+        value: 15m
+      - key: REFRESH_TOKEN_TTL
+        value: 30d
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: BACKEND_PUBLIC_URL
+        sync: false
+      # Optional — recommended in production since Render's own filesystem is ephemeral
+      # (local-disk upload fallback won't survive a redeploy/restart otherwise).
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Optional — omit to keep logging invite emails instead of sending them.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      # Optional — omit to keep logging push payloads instead of sending them.
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false

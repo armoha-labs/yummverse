@@ -1,4 +1,4 @@
-import { ApiError } from "./apiClient";
+import { ApiError, API_BASE_URL } from "./apiClient";
 import { customerAuthStore } from "./customerAuth";
 
 interface CustomerSessionResponse {
@@ -17,7 +17,7 @@ interface Envelope<T> {
 
 /** Public lookups (§21/§22) — no session required. */
 export async function fetchPublic<T>(path: string): Promise<T> {
-  const res = await fetch(`/api/v1${path}`);
+  const res = await fetch(`${API_BASE_URL}/api/v1${path}`);
   const body = (await res.json()) as Envelope<T>;
   if (!res.ok || !body.success || body.data === undefined) {
     throw new ApiError(res.status, body.error?.code ?? "REQUEST_FAILED", body.error?.message ?? res.statusText);
@@ -27,7 +27,7 @@ export async function fetchPublic<T>(path: string): Promise<T> {
 
 /** Raw fetch, never routed through customerApiFetch — avoids the 401-retry loop calling itself. */
 export async function requestCustomerSession(qrToken: string): Promise<CustomerSessionResponse> {
-  const res = await fetch("/api/v1/customer/session", {
+  const res = await fetch(`${API_BASE_URL}/api/v1/customer/session`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ qrToken }),
@@ -50,7 +50,7 @@ export async function customerApiFetch<T>(path: string, options: RequestInit = {
   }
   if (auth?.sessionToken) headers.set("Authorization", `Bearer ${auth.sessionToken}`);
 
-  const res = await fetch(`/api/v1${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE_URL}/api/v1${path}`, { ...options, headers });
 
   if (res.status === 401 && allowRetry && auth?.qrToken) {
     try {
