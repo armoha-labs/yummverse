@@ -14,7 +14,7 @@ interface RevenueReport {
   orderCount: number;
   grossRevenueChangePct: number | null;
   revenueByPaymentMethod: { method: string; amount: number }[];
-  revenueByBranch: { branchId: string; amount: number }[];
+  revenueByBranch: { branchId: string; branchName: string; amount: number }[];
 }
 
 interface TaxReport {
@@ -137,7 +137,7 @@ function RevenueTab() {
         </Panel>
         <Panel title="By Branch">
           {data.revenueByBranch.map((b) => (
-            <Row key={b.branchId} label={b.branchId} value={currency(b.amount)} />
+            <Row key={b.branchId} label={b.branchName} value={currency(b.amount)} />
           ))}
         </Panel>
       </div>

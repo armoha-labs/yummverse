@@ -20,7 +20,10 @@ export async function resolveQrContext(qrToken: string) {
   if (!tenant) {
     throw ApiError.notFound("INVALID_QR", "This QR code is no longer valid.");
   }
-  if (tenant.status !== "ACTIVE") {
+  // Same gate as staff login/access (auth.service.ts, tenant.middleware.ts) — TRIAL cafés
+  // must be able to serve customers too, otherwise there's no way to test the ordering
+  // flow during a trial. Only SUSPENDED/CANCELLED actually blocks.
+  if (tenant.status === "SUSPENDED" || tenant.status === "CANCELLED") {
     throw ApiError.forbidden("TENANT_UNAVAILABLE", "Café temporarily unavailable.");
   }
 

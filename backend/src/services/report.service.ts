@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { Order } from "../models/Order.js";
 import { Payment } from "../models/Payment.js";
+import { branchRepository } from "../repositories/branch.repository.js";
 
 export interface ReportRange {
   branchId?: string;
@@ -31,11 +32,16 @@ function percentChange(current: number, previous: number): number | null {
   return Math.round(((current - previous) / previous) * 1000) / 10;
 }
 
+async function branchNameMap(tenantId: string): Promise<Map<string, string>> {
+  const branches = await branchRepository.listForTenant(tenantId);
+  return new Map(branches.map((b) => [b._id.toString(), b.name]));
+}
+
 export const reportService = {
   async revenue(tenantId: string, range: ReportRange) {
     const paidMatch = matchStage(tenantId, range, { paymentStatus: "PAID" });
 
-    const [current, previous, byMethod, byBranch, trend] = await Promise.all([
+    const [current, previous, byMethod, byBranch, trend, branchNames] = await Promise.all([
       Order.aggregate([
         { $match: paidMatch },
         { $group: { _id: null, gross: { $sum: "$totalAmount" }, count: { $sum: 1 } } },
@@ -64,6 +70,7 @@ export const reportService = {
         },
         { $sort: { _id: 1 } },
       ]),
+      branchNameMap(tenantId),
     ]);
 
     const refunds = await Payment.aggregate([
@@ -86,7 +93,11 @@ export const reportService = {
       grossRevenueChangePct: percentChange(gross, prevGross),
       orderCountChangePct: percentChange(orderCount, prevCount),
       revenueByPaymentMethod: byMethod.map((m) => ({ method: m._id ?? "UNKNOWN", amount: m.amount })),
-      revenueByBranch: byBranch.map((b) => ({ branchId: b._id, amount: b.amount })),
+      revenueByBranch: byBranch.map((b) => ({
+        branchId: b._id,
+        branchName: branchNames.get(b._id?.toString()) ?? "Unknown Branch",
+        amount: b.amount,
+      })),
       trend: trend.map((t) => ({ date: t._id, amount: t.amount, orderCount: t.count })),
     };
   },
@@ -94,7 +105,7 @@ export const reportService = {
   async tax(tenantId: string, range: ReportRange) {
     const paidMatch = matchStage(tenantId, range, { paymentStatus: "PAID" });
 
-    const [totals, byRate, byBranch] = await Promise.all([
+    const [totals, byRate, byBranch, branchNames] = await Promise.all([
       Order.aggregate([
         { $match: paidMatch },
         { $group: { _id: null, taxCollected: { $sum: "$taxAmount" }, taxableAmount: { $sum: "$subtotal" } } },
@@ -126,6 +137,7 @@ export const reportService = {
         { $match: matchStage(tenantId, range, { paymentStatus: "PAID" }) },
         { $group: { _id: "$branchId", taxCollected: { $sum: "$taxAmount" } } },
       ]),
+      branchNameMap(tenantId),
     ]);
 
     return {
@@ -137,7 +149,11 @@ export const reportService = {
         taxCollected: Math.round(r.taxCollected * 100) / 100,
         orderCount: r.orderIds.length,
       })),
-      byBranch: byBranch.map((b) => ({ branchId: b._id, taxCollected: b.taxCollected })),
+      byBranch: byBranch.map((b) => ({
+        branchId: b._id,
+        branchName: branchNames.get(b._id?.toString()) ?? "Unknown Branch",
+        taxCollected: b.taxCollected,
+      })),
     };
   },
 

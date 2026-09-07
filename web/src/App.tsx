@@ -6,6 +6,7 @@ import PlatformLoginPage from "@/pages/auth/PlatformLoginPage";
 import AcceptInvitePage from "@/pages/auth/AcceptInvitePage";
 import DashboardPage from "@/pages/admin/DashboardPage";
 import OrdersPage from "@/pages/admin/OrdersPage";
+import PosOrderPage from "@/pages/admin/PosOrderPage";
 import KitchenMonitorPage from "@/pages/admin/KitchenMonitorPage";
 import MenuManagementPage from "@/pages/admin/MenuManagementPage";
 import TablesPage from "@/pages/admin/TablesPage";
@@ -54,6 +55,7 @@ export default function App() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="orders" element={<OrdersPage />} />
+        <Route path="pos" element={<PosOrderPage />} />
         <Route path="kitchen" element={<KitchenMonitorPage />} />
         <Route path="menu" element={<MenuManagementPage />} />
         <Route path="tables" element={<TablesPage />} />

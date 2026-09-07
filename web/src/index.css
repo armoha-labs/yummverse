@@ -115,7 +115,20 @@ body {
 }
 
 /* Printing a receipt (§23A.5's "browser print API for a basic setup") prints only the
-   element with this id, wherever it appears on the page — everything else is hidden. */
+   element with this id, wherever it appears on the page — everything else is hidden.
+   Sized for an 88mm thermal receipt printer rather than a full A4/Letter page: the @page
+   rule controls the physical page size a real thermal printer (or "print to PDF") uses,
+   and the id-selector rule below overrides the on-screen Tailwind padding (higher
+   specificity) so content isn't crammed against the paper's edge. */
+/* "auto" isn't a valid @page size value for a single dimension — CSS Paged Media requires
+   two explicit lengths. A receipt roll has no real fixed height, so this uses a generously
+   tall page instead (long enough that a realistic order never overflows onto a second
+   page); the printer itself just keeps advancing continuous paper regardless. */
+@page {
+  size: 88mm 1000mm;
+  margin: 0;
+}
+
 @media print {
   body * {
     visibility: hidden;
@@ -128,6 +141,8 @@ body {
     position: absolute;
     left: 0;
     top: 0;
-    width: 100%;
+    width: 88mm;
+    padding: 3mm 4mm;
+    font-family: "Courier New", Courier, monospace;
   }
 }

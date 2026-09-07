@@ -28,8 +28,14 @@ export async function generateTablesQrPdf(tenantName: string, tables: PrintableT
     doc.moveDown(0.5);
     doc.fontSize(24).text(`Table ${table.tableNumber}`, { align: "center" });
     doc.moveDown(1);
-    doc.image(qrPng, { fit: [220, 220], align: "center" });
-    doc.moveDown(1);
+
+    // doc.image() doesn't advance the cursor the way text() does — without this, the next
+    // text() call would render at the same y as before the image, landing on top of it.
+    const qrSize = 220;
+    const qrX = (doc.page.width - qrSize) / 2;
+    doc.image(qrPng, qrX, doc.y, { fit: [qrSize, qrSize] });
+    doc.y += qrSize + 16;
+
     doc.fontSize(10).text("Scan to view menu & order", { align: "center" });
   }
 

@@ -11,6 +11,7 @@ import {
   BarChart3,
   Settings,
   Plug,
+  ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -21,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 const NAV = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/orders", label: "Orders", icon: Receipt },
+  { to: "/admin/pos", label: "New Order", icon: ShoppingCart },
   { to: "/admin/kitchen", label: "Kitchen", icon: ChefHat },
   { to: "/admin/menu", label: "Menu", icon: UtensilsCrossed },
   { to: "/admin/tables", label: "Tables", icon: Armchair },
