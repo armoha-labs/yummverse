@@ -34,6 +34,7 @@ export interface CreateOrderInput {
 export function notifyOrderEnteredKitchen(order: OrderDocument): void {
   realtimeEvents.orderCreated(order.tenantId.toString(), order.branchId.toString(), order);
   notificationService.notifyKitchenNewOrder(order).catch((err: unknown) => logger.warn({ err }, "Push notification failed"));
+  notificationService.notifyAdminNewOrder(order).catch((err: unknown) => logger.warn({ err }, "Push notification failed"));
   notificationService
     .notifyCustomerOrderReceived(order)
     .catch((err: unknown) => logger.warn({ err }, "Push notification failed"));

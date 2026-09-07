@@ -5,6 +5,7 @@ import { Check, ClipboardList, Printer } from "lucide-react";
 import { customerApi } from "@/lib/customerApiClient";
 import { useCustomerAuth } from "@/lib/customerAuth";
 import { Receipt } from "@/components/Receipt";
+import { registerForPushNotifications } from "@/lib/pushNotifications";
 
 type OrderStatus =
   | "PENDING_PAYMENT"
@@ -115,6 +116,12 @@ export default function OrderTrackingPage() {
     const timer = setTimeout(() => window.print(), 300);
     return () => clearTimeout(timer);
   }, [orderId, paymentStatus]);
+
+  // Asked here rather than on landing/menu — "get notified when your order is ready" is an
+  // obvious value proposition once there's an actual order to track, not before.
+  useEffect(() => {
+    void registerForPushNotifications(customerApi.post);
+  }, []);
 
   if (detail.isLoading || !current) {
     return <div className="flex min-h-screen items-center justify-center text-sm text-text-muted">Loading your order…</div>;

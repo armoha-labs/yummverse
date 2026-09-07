@@ -29,6 +29,7 @@ async function resolveRegistrant(req: Request) {
       branchId: payload.role === "TENANT_ADMIN" ? undefined : payload.branchId,
       ownerType: "USER" as const,
       ownerId: payload.sub,
+      role: payload.role,
     };
   } catch {
     const session = await customerSessionService.resolveActiveSession(token);

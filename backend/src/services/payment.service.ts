@@ -179,6 +179,7 @@ export const paymentService = {
     realtimeEvents.paymentEvent(ctx.tenantId, ctx.branchId, "payment.paid", payment, ctx.sessionId);
     realtimeEvents.orderCreated(ctx.tenantId, ctx.branchId, order!);
     fireAndForget(notificationService.notifyKitchenNewOrder(order!));
+    fireAndForget(notificationService.notifyAdminNewOrder(order!));
     fireAndForget(notificationService.notifyCustomerOrderReceived(order!));
 
     return { verified: true, order: order! };
@@ -255,6 +256,7 @@ export const paymentService = {
         );
         realtimeEvents.orderCreated(payment.tenantId.toString(), payment.branchId.toString(), order);
         fireAndForget(notificationService.notifyKitchenNewOrder(order));
+        fireAndForget(notificationService.notifyAdminNewOrder(order));
         fireAndForget(notificationService.notifyCustomerOrderReceived(order));
       }
     } else if (result.eventType === "payment.failed") {

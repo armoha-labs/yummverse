@@ -45,6 +45,36 @@ describe("push notification device registration (§40A.3)", () => {
     const stored = await DeviceToken.findOne({ fcmToken: "staff-token-1" });
     expect(stored?.tenantId.toString()).toBe(tenant._id.toString());
     expect(stored?.ownerType).toBe("USER");
+    expect(stored?.role).toBe("TENANT_ADMIN");
+  });
+
+  it("scopes kitchen/waiter tokens by role within a branch, and reaches admin tenant-wide", async () => {
+    const { tenant, defaultBranch } = await createActivatedTenantAdmin("push-roles");
+    const { deviceTokenRepository } = await import("../src/repositories/deviceToken.repository.js");
+
+    await deviceTokenRepository.register({
+      tenantId: tenant._id, branchId: defaultBranch._id, ownerType: "USER", ownerId: tenant._id,
+      role: "KITCHEN", platform: "WEB", fcmToken: "kitchen-token",
+    });
+    await deviceTokenRepository.register({
+      tenantId: tenant._id, branchId: defaultBranch._id, ownerType: "USER", ownerId: tenant._id,
+      role: "WAITER", platform: "WEB", fcmToken: "waiter-token",
+    });
+    // Tenant Admin is never branch-locked (§6A.5) — no branchId on this one.
+    await deviceTokenRepository.register({
+      tenantId: tenant._id, ownerType: "USER", ownerId: tenant._id,
+      role: "TENANT_ADMIN", platform: "WEB", fcmToken: "admin-token",
+    });
+
+    const kitchenTokens = await deviceTokenRepository.findForBranchRole(tenant._id.toString(), defaultBranch._id.toString(), "KITCHEN");
+    expect(kitchenTokens.map((d) => d.fcmToken)).toEqual(["kitchen-token"]);
+
+    const waiterTokens = await deviceTokenRepository.findForBranchRole(tenant._id.toString(), defaultBranch._id.toString(), "WAITER");
+    expect(waiterTokens.map((d) => d.fcmToken)).toEqual(["waiter-token"]);
+
+    // Regression: admin's token has no branchId, so it must be reachable without one.
+    const adminTokens = await deviceTokenRepository.findForTenantRole(tenant._id.toString(), "TENANT_ADMIN");
+    expect(adminTokens.map((d) => d.fcmToken)).toEqual(["admin-token"]);
   });
 
   it("registers a customer session device and can deregister it", async () => {

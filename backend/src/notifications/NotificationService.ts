@@ -2,6 +2,7 @@ import { deviceTokenRepository } from "../repositories/deviceToken.repository.js
 import { env } from "../config/env.js";
 import { logger } from "../config/logger.js";
 import { tenantLimitsService } from "../services/tenantLimits.service.js";
+import type { DeviceStaffRole } from "../models/DeviceToken.js";
 
 interface PushPayload {
   title: string;
@@ -14,6 +15,7 @@ interface OrderLike {
   tenantId: unknown;
   branchId: unknown;
   orderNumber: number;
+  totalAmount?: number;
   tableId?: unknown;
   customer?: { sessionId?: unknown } | null;
 }
@@ -63,23 +65,74 @@ async function sendToTokens(tokens: string[], payload: PushPayload): Promise<voi
   );
 }
 
-async function tokensFor(tenantId: string, branchId: string, ownerType: "USER" | "CUSTOMER_SESSION", ownerId?: string) {
+async function pushEnabled(tenantId: string): Promise<boolean> {
   const limits = await tenantLimitsService.resolveEffectiveLimits(tenantId);
-  if (!limits.firebasePushEnabled) return [];
+  return limits.firebasePushEnabled;
+}
 
-  const devices = ownerId
-    ? await deviceTokenRepository.findForOwner(tenantId, ownerType, ownerId)
-    : await deviceTokenRepository.findForOwnerType(tenantId, branchId, ownerType);
+/** Kitchen/Waiter — branch-locked, and role-scoped so each only gets what's meant for it
+ * (previously both received every branch USER token's notifications indiscriminately). */
+async function tokensForBranchRole(tenantId: string, branchId: string, role: DeviceStaffRole): Promise<string[]> {
+  if (!(await pushEnabled(tenantId))) return [];
+  const devices = await deviceTokenRepository.findForBranchRole(tenantId, branchId, role);
   return devices.map((d) => d.fcmToken);
+}
+
+/** Tenant Admin — never branch-locked (§6A.5), so their device token has no branchId and a
+ * branch-scoped query would never match it. Reaches every admin across the whole tenant. */
+async function tokensForTenantRole(tenantId: string, role: DeviceStaffRole): Promise<string[]> {
+  if (!(await pushEnabled(tenantId))) return [];
+  const devices = await deviceTokenRepository.findForTenantRole(tenantId, role);
+  return devices.map((d) => d.fcmToken);
+}
+
+async function tokensForCustomer(tenantId: string, sessionId: string): Promise<string[]> {
+  if (!(await pushEnabled(tenantId))) return [];
+  const devices = await deviceTokenRepository.findForOwner(tenantId, "CUSTOMER_SESSION", sessionId);
+  return devices.map((d) => d.fcmToken);
+}
+
+function orderData(order: OrderLike, type: string): Record<string, string> {
+  return { type, orderId: String(order._id), tenantId: String(order.tenantId), branchId: String(order.branchId) };
 }
 
 export const notificationService = {
   async notifyKitchenNewOrder(order: OrderLike): Promise<void> {
-    const tokens = await tokensFor(order.tenantId as string, order.branchId as string, "USER");
+    const tokens = await tokensForBranchRole(order.tenantId as string, order.branchId as string, "KITCHEN");
     await sendToTokens(tokens, {
       title: "New order placed",
       body: `New order #${order.orderNumber}`,
-      data: { type: "order.created", orderId: String(order._id), tenantId: String(order.tenantId), branchId: String(order.branchId) },
+      data: orderData(order, "order.created"),
+    });
+  },
+
+  async notifyWaiterOrderReady(order: OrderLike): Promise<void> {
+    const tokens = await tokensForBranchRole(order.tenantId as string, order.branchId as string, "WAITER");
+    await sendToTokens(tokens, {
+      title: "Order ready",
+      body: `Order #${order.orderNumber} ready`,
+      data: orderData(order, "order.ready"),
+    });
+  },
+
+  /** Tenant Admin oversees the whole café — new orders and payments both matter to them,
+   * even though they aren't the ones actually acting on the order. */
+  async notifyAdminNewOrder(order: OrderLike): Promise<void> {
+    const tokens = await tokensForTenantRole(order.tenantId as string, "TENANT_ADMIN");
+    await sendToTokens(tokens, {
+      title: "New order placed",
+      body: `Order #${order.orderNumber} — new order received`,
+      data: orderData(order, "order.created"),
+    });
+  },
+
+  async notifyAdminPaymentReceived(order: OrderLike): Promise<void> {
+    const tokens = await tokensForTenantRole(order.tenantId as string, "TENANT_ADMIN");
+    const amount = order.totalAmount !== undefined ? ` — ₹${order.totalAmount}` : "";
+    await sendToTokens(tokens, {
+      title: "Payment received",
+      body: `Order #${order.orderNumber}${amount}`,
+      data: orderData(order, "payment.paid"),
     });
   },
 
@@ -95,6 +148,14 @@ export const notificationService = {
     await this.notifyCustomer(order, "order.ready", "Your order is ready!", `Order #${order.orderNumber}`);
   },
 
+  /** Distinct from notifyCustomerOrderReceived — that fires when an online "pay now" order
+   * is first created (payment already succeeded by then). This is for the other settlement
+   * paths (POS cash/card at the counter, or a pay-later order paid after the fact), where the
+   * customer's own device wasn't part of collecting payment and otherwise never hears about it. */
+  async notifyCustomerPaymentCompleted(order: OrderLike): Promise<void> {
+    await this.notifyCustomer(order, "payment.paid", "Payment received", `Order #${order.orderNumber} — thank you!`);
+  },
+
   async notifyCustomerPaymentFailed(order: OrderLike): Promise<void> {
     await this.notifyCustomer(
       order,
@@ -104,23 +165,10 @@ export const notificationService = {
     );
   },
 
-  async notifyWaiterOrderReady(order: OrderLike): Promise<void> {
-    const tokens = await tokensFor(order.tenantId as string, order.branchId as string, "USER");
-    await sendToTokens(tokens, {
-      title: "Order ready",
-      body: `Order #${order.orderNumber} ready`,
-      data: { type: "order.ready", orderId: String(order._id), tenantId: String(order.tenantId), branchId: String(order.branchId) },
-    });
-  },
-
   async notifyCustomer(order: OrderLike, type: string, title: string, body: string): Promise<void> {
     const sessionId = order.customer?.sessionId;
     if (!sessionId) return; // POS orders have no customer session/device to notify
-    const tokens = await tokensFor(order.tenantId as string, order.branchId as string, "CUSTOMER_SESSION", String(sessionId));
-    await sendToTokens(tokens, {
-      title,
-      body,
-      data: { type, orderId: String(order._id), tenantId: String(order.tenantId), branchId: String(order.branchId) },
-    });
+    const tokens = await tokensForCustomer(order.tenantId as string, String(sessionId));
+    await sendToTokens(tokens, { title, body, data: orderData(order, type) });
   },
 };

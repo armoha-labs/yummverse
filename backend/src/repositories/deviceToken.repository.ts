@@ -1,4 +1,4 @@
-import { DeviceToken, type DeviceOwnerType, type DevicePlatform } from "../models/DeviceToken.js";
+import { DeviceToken, type DeviceOwnerType, type DevicePlatform, type DeviceStaffRole } from "../models/DeviceToken.js";
 import { Types } from "mongoose";
 
 export const deviceTokenRepository = {
@@ -7,6 +7,7 @@ export const deviceTokenRepository = {
     branchId?: string | Types.ObjectId;
     ownerType: DeviceOwnerType;
     ownerId: string | Types.ObjectId;
+    role?: DeviceStaffRole;
     platform: DevicePlatform;
     fcmToken: string;
   }) {
@@ -25,10 +26,17 @@ export const deviceTokenRepository = {
     return DeviceToken.deleteOne({ fcmToken });
   },
 
-  // Always scoped to tenantId (+branchId for branch-locked roles) — never an unscoped
-  // "all tokens" query (§40A.2's explicit warning).
-  findForOwnerType(tenantId: string, branchId: string, ownerType: DeviceOwnerType) {
-    return DeviceToken.find({ tenantId, branchId, ownerType });
+  // Branch-locked staff (Kitchen/Waiter) — scoped to tenantId+branchId+role so each role
+  // gets only the notifications meant for it, never every branch-scoped USER token (§40A.2's
+  // explicit "never an unscoped 'all tokens' query" warning still applies here).
+  findForBranchRole(tenantId: string, branchId: string, role: DeviceStaffRole) {
+    return DeviceToken.find({ tenantId, branchId, role });
+  },
+
+  // Tenant Admin isn't branch-locked (§6A.5) — their token has no branchId, so reaching them
+  // needs a tenant-wide lookup rather than the branch-scoped one above.
+  findForTenantRole(tenantId: string, role: DeviceStaffRole) {
+    return DeviceToken.find({ tenantId, role });
   },
 
   findForOwner(tenantId: string, ownerType: DeviceOwnerType, ownerId: string) {

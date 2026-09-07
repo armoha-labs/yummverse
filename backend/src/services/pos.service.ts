@@ -5,8 +5,14 @@ import { nextSequence } from "../models/Counter.js";
 import { resolveEffectiveRates, calculateOrderTotals, resolveOrderLines } from "./orderCalculation.service.js";
 import { paymentService } from "./payment.service.js";
 import { realtimeEvents } from "../sockets/realtimeEvents.js";
+import { notificationService } from "../notifications/NotificationService.js";
+import { logger } from "../config/logger.js";
 import { ApiError } from "../utils/ApiError.js";
 import type { CreateOrderItemInput } from "./order.service.js";
+
+function fireAndForget(promise: Promise<void>): void {
+  promise.catch((err: unknown) => logger.warn({ err }, "Push notification failed"));
+}
 
 export interface CreatePosOrderInput {
   items: CreateOrderItemInput[];
@@ -110,6 +116,17 @@ export const posService = {
 
     realtimeEvents.paymentEvent(actor.tenantId, branchId, "payment.paid", payment);
     if (enteringKitchen) realtimeEvents.orderCreated(actor.tenantId, branchId, order);
+
+    // §40A: parallel to the Socket.IO events above, for a backgrounded client. Never the
+    // sole delivery mechanism, never awaited into the request path.
+    if (enteringKitchen) {
+      fireAndForget(notificationService.notifyKitchenNewOrder(order));
+      fireAndForget(notificationService.notifyAdminNewOrder(order));
+    }
+    fireAndForget(notificationService.notifyAdminPaymentReceived(order));
+    // No-ops internally when there's no customer session (a pure walk-in POS order) — the
+    // guard already lives in notifyCustomer, so this is always safe to call.
+    fireAndForget(notificationService.notifyCustomerPaymentCompleted(order));
 
     return { order, payment };
   },

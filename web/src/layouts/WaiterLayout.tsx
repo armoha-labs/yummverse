@@ -1,13 +1,20 @@
+import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Armchair, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, logout } from "@/lib/auth";
 import { useStaffBranding } from "@/lib/useTenantBranding";
+import { api } from "@/lib/apiClient";
+import { registerForPushNotifications } from "@/lib/pushNotifications";
 
 export default function WaiterLayout() {
   const auth = useAuth();
   const navigate = useNavigate();
   const branding = useStaffBranding();
+
+  useEffect(() => {
+    void registerForPushNotifications(api.post);
+  }, []);
 
   async function onLogout() {
     await logout();

@@ -5,6 +5,7 @@ import { api } from "@/lib/apiClient";
 import { useAuth, logout } from "@/lib/auth";
 import { useStaffBranding } from "@/lib/useTenantBranding";
 import { useNavigate } from "react-router-dom";
+import { registerForPushNotifications } from "@/lib/pushNotifications";
 
 interface OrderItem {
   name: string;
@@ -45,6 +46,10 @@ export default function KitchenDisplayPage() {
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 15000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    void registerForPushNotifications(api.post);
   }, []);
 
   const orders = useQuery({

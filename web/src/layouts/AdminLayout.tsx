@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -18,6 +19,8 @@ import { useAuth } from "@/lib/auth";
 import { useTenantBranding } from "@/lib/useTenantBranding";
 import { logout } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/apiClient";
+import { registerForPushNotifications } from "@/lib/pushNotifications";
 
 const NAV = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -38,6 +41,10 @@ export default function AdminLayout() {
   const auth = useAuth();
   const navigate = useNavigate();
   const branding = useTenantBranding();
+
+  useEffect(() => {
+    void registerForPushNotifications(api.post);
+  }, []);
 
   async function onLogout() {
     await logout();
