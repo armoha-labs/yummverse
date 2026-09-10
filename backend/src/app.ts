@@ -21,7 +21,18 @@ export function createApp(): Express {
 
   // Serves local-disk-stored images (dev fallback, §54) — a no-op path in production once
   // CLOUDINARY_* env vars are set, since uploads never land on disk in that case.
-  app.use("/uploads", express.static(UPLOADS_ROOT));
+  // Relaxes helmet()'s default Cross-Origin-Resource-Policy: same-origin, which otherwise
+  // blocks the frontend (a different origin from the API, even in local dev) from loading
+  // these images at all — branding logos are meant to be publicly embeddable, unlike the
+  // JSON API responses same-origin is protecting.
+  app.use(
+    "/uploads",
+    (_req, res, next) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      next();
+    },
+    express.static(UPLOADS_ROOT),
+  );
 
   app.use("/api/v1", apiRouter);
 

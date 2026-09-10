@@ -5,6 +5,7 @@ import { Check, ClipboardList, Printer } from "lucide-react";
 import { customerApi } from "@/lib/customerApiClient";
 import { useCustomerAuth } from "@/lib/customerAuth";
 import { Receipt } from "@/components/Receipt";
+import { printReceipt } from "@/lib/printReceipt";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
 
 type OrderStatus =
@@ -113,7 +114,7 @@ export default function OrderTrackingPage() {
       // on a later poll tick.
     }
     setShowReceipt(true);
-    const timer = setTimeout(() => window.print(), 300);
+    const timer = setTimeout(() => printReceipt(), 300);
     return () => clearTimeout(timer);
   }, [orderId, paymentStatus]);
 
@@ -227,7 +228,7 @@ export default function OrderTrackingPage() {
             <button
               onClick={() => {
                 setShowReceipt(true);
-                setTimeout(() => window.print(), 50);
+                setTimeout(() => printReceipt(), 50);
               }}
               className="flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-2 text-[12.5px] font-semibold text-white"
             >
@@ -242,9 +243,11 @@ export default function OrderTrackingPage() {
         <Receipt
           visible={showReceipt}
           data={{
+            tenantName: auth?.tenantName ?? "",
+            logoUrl: auth?.logoUrl,
             orderNumber: detail.data.orderNumber,
             createdAt: detail.data.createdAt,
-            subtitle: `${auth?.tenantName ?? ""} · Table ${auth?.tableNumber ?? ""}`,
+            subtitle: `Table ${auth?.tableNumber ?? ""}`,
             items: detail.data.items,
             taxAmount: detail.data.taxAmount,
             serviceCharge: detail.data.serviceCharge,

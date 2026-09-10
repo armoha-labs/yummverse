@@ -9,9 +9,14 @@ export interface ReceiptItem {
 }
 
 export interface ReceiptData {
+  /** The receipt's title — this café's name, not a generic "Receipt" heading. */
+  tenantName: string;
+  /** Same branding.logoUrl shown on the login page and the PDF report export — undefined
+   * cafés just get the text title with no image, same as those two surfaces. */
+  logoUrl?: string;
   orderNumber: number;
   createdAt: string;
-  /** e.g. "Green Leaf Cafe · Table 3" or "Green Leaf Cafe · POS" */
+  /** e.g. "Table 3" or "POS" — no café name here anymore, that's now the title above it. */
   subtitle: string;
   items: ReceiptItem[];
   taxAmount: number;
@@ -34,10 +39,12 @@ export function Receipt({ data, visible }: { data: ReceiptData; visible: boolean
       id={RECEIPT_PRINT_AREA_ID}
       className={`mx-5 mb-8 flex-col gap-2 rounded-2xl border border-border bg-surface p-[18px] shadow-sm2 print:flex print:rounded-none print:border-none print:shadow-none ${visible ? "flex" : "hidden"}`}
     >
-      <div className="mb-1 flex items-center gap-2 font-display text-sm font-bold">
-        <ShoppingBag size={15} strokeWidth={1.75} className="print:hidden" /> Receipt
+      {data.logoUrl && <img src={data.logoUrl} alt="" className="mx-auto h-10 w-10 rounded object-contain" />}
+      <div className="text-center font-display text-base font-extrabold">{data.tenantName}</div>
+      <div className="mb-1 flex items-center justify-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+        <ShoppingBag size={12} strokeWidth={1.75} className="print:hidden" /> Receipt
       </div>
-      <div className="mb-1 text-[12px] text-text-muted">
+      <div className="mb-1 text-center text-[12px] text-text-muted">
         {data.subtitle}
         <br />
         Order #{data.orderNumber} &middot; {new Date(data.createdAt).toLocaleString()}

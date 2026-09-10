@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Receipt } from "@/components/Receipt";
+import { printReceipt as printReceiptPage } from "@/lib/printReceipt";
 import { useTenantBranding } from "@/lib/useTenantBranding";
 
 interface OrderRow {
@@ -87,7 +88,7 @@ export default function OrdersPage() {
     mutationFn: (id: string) => api.get<OrderDetail>(`/admin/orders/${id}`),
     onSuccess: (order) => {
       setPrinting(order);
-      setTimeout(() => window.print(), 50);
+      setTimeout(() => printReceiptPage(), 50);
     },
   });
 
@@ -173,9 +174,11 @@ export default function OrdersPage() {
         <Receipt
           visible={false}
           data={{
+            tenantName: branding.data?.name ?? "",
+            logoUrl: branding.data?.branding?.logoUrl,
             orderNumber: printing.orderNumber,
             createdAt: printing.createdAt,
-            subtitle: `${branding.data?.name ?? ""} · ${printing.channel === "QR" ? "QR Order" : "POS"}`,
+            subtitle: printing.channel === "QR" ? "QR Order" : "POS",
             items: printing.items,
             taxAmount: printing.taxAmount,
             serviceCharge: printing.serviceCharge,
