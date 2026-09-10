@@ -98,7 +98,7 @@ describe("tenant profile & settings", () => {
     expect(ok.body.data.primaryColor).toBe("#4B2E2B");
   });
 
-  it("uploads and replaces a logo via the local storage fallback, then removes it", async () => {
+  it("stores an uploaded logo as base64 (primary) with a local-disk backup copy, replaces, then removes both", async () => {
     const { app, accessToken } = await createActivatedTenantAdmin("settings-e");
     const png = Buffer.from(
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
@@ -116,7 +116,11 @@ describe("tenant profile & settings", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .attach("file", png, { filename: "logo.png", contentType: "image/png" });
     expect(uploaded.status).toBe(200);
-    expect(uploaded.body.data.logoUrl).toContain("/uploads/tenants/");
+    // Primary: base64 data URI, directly usable as an <img src> with no separate fetch.
+    expect(uploaded.body.data.logoUrl).toMatch(/^data:image\/png;base64,/);
+    expect(uploaded.body.data.logoUrl).toContain(png.toString("base64"));
+    // Secondary: still also written to local disk as a backup copy.
+    expect(uploaded.body.data.logoAssetId).toContain("branding/");
     const firstAssetId = uploaded.body.data.logoAssetId;
 
     const replaced = await request(app)

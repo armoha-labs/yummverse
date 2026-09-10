@@ -21,4 +21,14 @@ export function getStorageProvider(): StorageProvider {
   return instance;
 }
 
+let localInstance: LocalDiskStorageProvider | undefined;
+
+/** Local disk specifically, regardless of whether Cloudinary is configured — for callers
+ * that want disk as a secondary backup copy alongside a different primary store, not as
+ * getStorageProvider()'s fallback-only behavior. */
+export function getLocalDiskStorage(): LocalDiskStorageProvider {
+  localInstance ??= new LocalDiskStorageProvider(env.BACKEND_PUBLIC_URL);
+  return localInstance;
+}
+
 export type { StorageProvider, UploadedFile, StoredAsset } from "./StorageProvider.js";

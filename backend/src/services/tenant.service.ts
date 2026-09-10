@@ -9,7 +9,7 @@ import { generateToken, hashToken } from "../utils/password.js";
 import { logger } from "../config/logger.js";
 import { env } from "../config/env.js";
 import { emailService } from "./email.service.js";
-import { getStorageProvider, type UploadedFile } from "../storage/index.js";
+import { getStorageProvider, getLocalDiskStorage, type UploadedFile } from "../storage/index.js";
 import type { TenantStatus, TenantDocument } from "../models/Tenant.js";
 import type { AuditContext } from "./audit.service.js";
 import type { PlanId } from "../config/plans.js";
@@ -262,24 +262,40 @@ export const tenantService = {
     const tenant = await tenantRepository.findById(tenantId);
     if (!tenant) throw ApiError.notFound("TENANT_NOT_FOUND", "Tenant not found.");
 
-    const storage = getStorageProvider();
-    const previousAssetId = kind === "logo" ? tenant.branding?.logoAssetId : undefined;
-
-    const asset = await storage.upload(`tenants/${tenantId}/branding`, file);
-
     tenant.branding ??= {};
-    if (kind === "logo") {
-      tenant.branding.logoUrl = asset.url;
-      tenant.branding.logoAssetId = asset.assetId;
-    } else {
-      tenant.branding.faviconUrl = asset.url;
-    }
-    await tenant.save();
 
-    if (previousAssetId) {
-      await storage.delete(previousAssetId).catch((err: unknown) => {
-        logger.warn({ err, previousAssetId }, "Failed to delete replaced branding asset");
-      });
+    if (kind === "logo") {
+      const previousAssetId = tenant.branding.logoAssetId;
+
+      // Primary: base64 straight into the tenant document — displays identically to a
+      // normal URL (an <img src> data URI needs nothing special) and works the same in
+      // every deployment, with no dependency on an external service or a persistent
+      // filesystem (Render's is not — a local-disk-only logo gets wiped on every redeploy).
+      tenant.branding.logoUrl = `data:${file.mimeType};base64,${file.buffer.toString("base64")}`;
+
+      // Secondary: also write the file to local disk as a backup copy — best-effort, since
+      // losing this doesn't lose the actual logo (the base64 copy above is authoritative).
+      try {
+        const backup = await getLocalDiskStorage().upload(`tenants/${tenantId}/branding`, file);
+        tenant.branding.logoAssetId = backup.assetId;
+      } catch (err) {
+        logger.warn({ err, tenantId }, "Failed to write local-disk backup copy of uploaded logo");
+        tenant.branding.logoAssetId = undefined;
+      }
+
+      await tenant.save();
+
+      if (previousAssetId) {
+        await getLocalDiskStorage()
+          .delete(previousAssetId)
+          .catch((err: unknown) => {
+            logger.warn({ err, previousAssetId }, "Failed to delete replaced branding asset backup");
+          });
+      }
+    } else {
+      const asset = await getStorageProvider().upload(`tenants/${tenantId}/branding`, file);
+      tenant.branding.faviconUrl = asset.url;
+      await tenant.save();
     }
 
     await auditService.record({
@@ -308,10 +324,12 @@ export const tenantService = {
     await tenant.save();
 
     if (assetId) {
-      await getStorageProvider()
+      // assetId always refers to the local-disk backup copy now (uploadLogo's primary
+      // store is the base64 field itself, which the two lines above already cleared).
+      await getLocalDiskStorage()
         .delete(assetId)
         .catch((err: unknown) => {
-          logger.warn({ err, assetId }, "Failed to delete removed branding asset");
+          logger.warn({ err, assetId }, "Failed to delete removed branding asset backup");
         });
     }
 

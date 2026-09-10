@@ -232,7 +232,7 @@ function BrandingTab() {
             Upload New Logo
           </Button>
         </div>
-        <div className="text-xs text-text-muted">Recommended: square PNG/SVG, max 2MB</div>
+        <div className="text-xs text-text-muted">Recommended: square PNG/SVG, max 1MB</div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -43,8 +43,25 @@ function formatRowsForPdf(rows: ExportRow[]): ExportRow[] {
 /** Best-effort — a missing/unreachable logo degrades to a text-only PDF header rather than
  * failing the whole export (same "never let a cosmetic extra break the core action"
  * philosophy as everywhere else optional media is fetched in this codebase). */
+const DATA_URI_RE = /^data:[^;]+;base64,(.+)$/s;
+
 async function fetchLogo(logoUrl: string | undefined): Promise<Buffer | undefined> {
   if (!logoUrl) return undefined;
+
+  // Newly uploaded logos are stored as a base64 data URI directly on the tenant document —
+  // decode inline rather than round-tripping through an HTTP fetch of ourselves.
+  const dataUriMatch = DATA_URI_RE.exec(logoUrl);
+  if (dataUriMatch) {
+    try {
+      return Buffer.from(dataUriMatch[1]!, "base64");
+    } catch (err) {
+      logger.warn({ err }, "Report PDF: failed to decode tenant logo data URI, continuing without it");
+      return undefined;
+    }
+  }
+
+  // Backward compatibility with a logo uploaded before this change (a real URL, e.g.
+  // Cloudinary or an old local-disk one).
   try {
     const res = await fetch(logoUrl);
     if (!res.ok) return undefined;

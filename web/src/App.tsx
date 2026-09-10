@@ -43,6 +43,10 @@ export default function App() {
       <Route path="/:tenantSlug/accept-invite" element={<AcceptInvitePage />} />
       <Route path="/platform/login" element={<PlatformLoginPage />} />
 
+      {/* Bare tenant slug (e.g. shared as a plain café link) — send to the admin login */}
+      <Route path="/:tenantSlug" element={<Navigate to="admin/login" replace />} />
+      <Route path="/:tenantSlug/" element={<Navigate to="admin/login" replace />} />
+
       {/* Tenant Admin console — slug-free once signed in (§32) */}
       <Route
         path="/admin"
