@@ -1,9 +1,9 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Check, ShieldCheck, Wallet, Store } from "lucide-react";
 import { cartStore, useCart } from "@/lib/cartStore";
-import { useCustomerAuth } from "@/lib/customerAuth";
-import { customerApi } from "@/lib/customerApiClient";
+import { customerAuthStore, useCustomerAuth } from "@/lib/customerAuth";
+import { customerApi, fetchPublic } from "@/lib/customerApiClient";
 import { formatMoney } from "@/lib/utils";
 import { openRazorpayCheckout } from "@/lib/razorpay";
 import { ApiError } from "@/lib/apiClient";
@@ -46,6 +46,28 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  // The customer session caches allowPayLater from the moment they scanned the QR code
+  // (§21) — a café admin flipping the setting mid-session wouldn't otherwise be reflected
+  // until the customer re-scans. Refresh it right when it matters: the payment-method choice.
+  useEffect(() => {
+    if (!qrToken) return;
+    let cancelled = false;
+    fetchPublic<{ branch: { allowPayLater: boolean } }>(`/public/tables/${qrToken}`)
+      .then((ctx) => {
+        if (cancelled) return;
+        const current = customerAuthStore.get();
+        if (current && current.qrToken === qrToken && current.allowPayLater !== ctx.branch.allowPayLater) {
+          customerAuthStore.set({ ...current, allowPayLater: ctx.branch.allowPayLater });
+        }
+      })
+      .catch(() => {
+        // Best-effort refresh — keep using the session's last-known value on failure.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [qrToken]);
 
   async function placeOrder() {
     if (!name.trim()) {

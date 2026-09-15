@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowDown, ArrowUp, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Plus } from "lucide-react";
 import { api } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,10 +155,24 @@ function CategoriesTab() {
 function ItemsTab() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const categories = useQuery({ queryKey: ["categories"], queryFn: () => api.get<Category[]>("/admin/categories") });
   const items = useQuery({ queryKey: ["menu-items"], queryFn: () => api.get<MenuItem[]>("/admin/menu-items") });
 
   const form = useForm<ItemForm>({ resolver: zodResolver(itemSchema), defaultValues: { taxPercentage: 0 } });
+  const editForm = useForm<ItemForm>({ resolver: zodResolver(itemSchema) });
+
+  useEffect(() => {
+    if (editingItem) {
+      editForm.reset({
+        categoryId: editingItem.categoryId,
+        name: editingItem.name,
+        description: editingItem.description ?? "",
+        price: editingItem.price,
+        taxPercentage: editingItem.taxPercentage,
+      });
+    }
+  }, [editingItem, editForm]);
 
   const create = useMutation({
     mutationFn: (data: ItemForm) => api.post("/admin/menu-items", data),
@@ -166,6 +180,14 @@ function ItemsTab() {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       form.reset({ taxPercentage: 0 });
       setOpen(false);
+    },
+  });
+
+  const update = useMutation({
+    mutationFn: (data: ItemForm) => api.put(`/admin/menu-items/${editingItem!._id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
+      setEditingItem(null);
     },
   });
 
@@ -239,15 +261,16 @@ function ItemsTab() {
 
       <div className="overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
         <div className="overflow-x-auto">
-          <div className="min-w-[520px]">
-            <div className="grid grid-cols-[1fr_130px_90px_90px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+          <div className="min-w-[580px]">
+            <div className="grid grid-cols-[1fr_130px_90px_90px_50px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
               <div>Name</div>
               <div>Category</div>
               <div>Price</div>
               <div>Available</div>
+              <div />
             </div>
             {items.data?.map((item) => (
-              <div key={item._id} className="grid grid-cols-[1fr_130px_90px_90px] items-center gap-2 border-t border-border px-5 py-3 text-sm">
+              <div key={item._id} className="grid grid-cols-[1fr_130px_90px_90px_50px] items-center gap-2 border-t border-border px-5 py-3 text-sm">
                 <div className="font-medium">{item.name}</div>
                 <div className="text-text-muted">{categoryName(item.categoryId)}</div>
                 <div>₹{item.price}</div>
@@ -255,12 +278,70 @@ function ItemsTab() {
                   checked={item.isAvailable}
                   onCheckedChange={(checked) => toggleAvailability.mutate({ id: item._id, isAvailable: checked })}
                 />
+                <button
+                  onClick={() => setEditingItem(item)}
+                  className="flex h-7 w-7 items-center justify-center rounded-[8px] text-text-muted hover:bg-bg hover:text-text"
+                  title="Edit item"
+                >
+                  <Pencil size={14} />
+                </button>
               </div>
             ))}
             {items.data?.length === 0 && <div className="px-5 py-8 text-center text-sm text-text-muted">No items yet.</div>}
           </div>
         </div>
       </div>
+
+      <Dialog open={Boolean(editingItem)} onOpenChange={(o) => !o && setEditingItem(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Item</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={editForm.handleSubmit((data) => update.mutate(data))} className="flex flex-col gap-3.5">
+            <div className="flex flex-col gap-1.5">
+              <Label>Category</Label>
+              <Select value={editForm.watch("categoryId")} onValueChange={(v) => editForm.setValue("categoryId", v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.data?.map((c) => (
+                    <SelectItem key={c._id} value={c._id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {editForm.formState.errors.categoryId && (
+                <div className="text-xs text-danger">{editForm.formState.errors.categoryId.message}</div>
+              )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Name</Label>
+              <Input {...editForm.register("name")} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Description</Label>
+              <Textarea rows={2} {...editForm.register("description")} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label>Price (₹)</Label>
+                <Input type="number" step="0.01" {...editForm.register("price")} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Tax %</Label>
+                <Input type="number" step="0.01" {...editForm.register("taxPercentage")} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={update.isPending}>
+                {update.isPending ? "Saving…" : "Save"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
