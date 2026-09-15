@@ -24,19 +24,21 @@ import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/apiClient";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
 
+// Relative to the current match (/:tenantSlug/admin) so the café slug in the URL is
+// preserved when navigating between sections instead of being dropped.
 const NAV = [
-  { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/admin/orders", label: "Orders", icon: Receipt },
-  { to: "/admin/pos", label: "New Order", icon: ShoppingCart },
-  { to: "/admin/kitchen", label: "Kitchen", icon: ChefHat },
-  { to: "/admin/menu", label: "Menu", icon: UtensilsCrossed },
-  { to: "/admin/tables", label: "Tables", icon: Armchair },
-  { to: "/admin/branches", label: "Branches", icon: Building2 },
-  { to: "/admin/staff", label: "Staff", icon: Users },
-  { to: "/admin/payment-settings", label: "Payments", icon: CreditCard },
-  { to: "/admin/integrations", label: "Integrations", icon: Plug },
-  { to: "/admin/reports", label: "Reports", icon: BarChart3 },
-  { to: "/admin/settings", label: "Settings", icon: Settings },
+  { to: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "orders", label: "Orders", icon: Receipt },
+  { to: "pos", label: "New Order", icon: ShoppingCart },
+  { to: "kitchen", label: "Kitchen", icon: ChefHat },
+  { to: "menu", label: "Menu", icon: UtensilsCrossed },
+  { to: "tables", label: "Tables", icon: Armchair },
+  { to: "branches", label: "Branches", icon: Building2 },
+  { to: "staff", label: "Staff", icon: Users },
+  { to: "payment-settings", label: "Payments", icon: CreditCard },
+  { to: "integrations", label: "Integrations", icon: Plug },
+  { to: "reports", label: "Reports", icon: BarChart3 },
+  { to: "settings", label: "Settings", icon: Settings },
 ];
 
 export default function AdminLayout() {

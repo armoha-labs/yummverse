@@ -47,7 +47,7 @@ export default function WaiterLayout() {
 
       <nav className="fixed bottom-0 left-1/2 flex w-full max-w-md -translate-x-1/2 border-t border-border bg-surface px-2 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
         <NavLink
-          to="/waiter/tables"
+          to="tables"
           className={({ isActive }) =>
             cn("flex flex-1 flex-col items-center gap-1 text-text-muted", isActive && "text-accent")
           }
@@ -56,7 +56,7 @@ export default function WaiterLayout() {
           <span className="text-[10px] font-semibold">Tables</span>
         </NavLink>
         <NavLink
-          to="/waiter/orders"
+          to="orders"
           className={({ isActive }) =>
             cn("flex flex-1 flex-col items-center gap-1 text-text-muted", isActive && "text-accent")
           }

@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/apiClient";
 import { loginStaff } from "@/lib/auth";
-import { lastTenantSlug } from "@/lib/lastTenantSlug";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -23,9 +22,9 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 const ROLE_HOME: Record<string, string> = {
-  admin: "/admin/dashboard",
-  waiter: "/waiter",
-  kitchen: "/kitchen",
+  admin: "admin/dashboard",
+  waiter: "waiter",
+  kitchen: "kitchen",
 };
 
 export default function StaffLoginPage({ role }: { role: "admin" | "waiter" | "kitchen" }) {
@@ -35,10 +34,6 @@ export default function StaffLoginPage({ role }: { role: "admin" | "waiter" | "k
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (tenantSlug) lastTenantSlug.set(tenantSlug);
-  }, [tenantSlug]);
 
   // Public lookup — name/logo/colors only, no auth data (§32).
   const { data: branding } = useQuery({
@@ -54,7 +49,7 @@ export default function StaffLoginPage({ role }: { role: "admin" | "waiter" | "k
     setSubmitting(true);
     try {
       await loginStaff(tenantSlug, email, password);
-      navigate(ROLE_HOME[role]!, { replace: true });
+      navigate(`/${tenantSlug}/${ROLE_HOME[role]!}`, { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {

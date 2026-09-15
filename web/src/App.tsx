@@ -47,9 +47,11 @@ export default function App() {
       <Route path="/:tenantSlug" element={<Navigate to="admin/login" replace />} />
       <Route path="/:tenantSlug/" element={<Navigate to="admin/login" replace />} />
 
-      {/* Tenant Admin console — slug-free once signed in (§32) */}
+      {/* Tenant Admin console — the café slug stays in the URL for every authenticated
+          screen (§32) so it's bookmarkable per café and two cafés open in different tabs
+          never collide (auth lives in localStorage, shared across tabs). */}
       <Route
-        path="/admin"
+        path="/:tenantSlug/admin"
         element={
           <ProtectedRoute role="TENANT_ADMIN">
             <AdminLayout />
@@ -88,7 +90,7 @@ export default function App() {
 
       {/* Waiter app — mobile, branch-scoped (§6A.5) */}
       <Route
-        path="/waiter"
+        path="/:tenantSlug/waiter"
         element={
           <ProtectedRoute role="WAITER">
             <WaiterLayout />
@@ -101,7 +103,7 @@ export default function App() {
       </Route>
 
       <Route
-        path="/kitchen"
+        path="/:tenantSlug/kitchen"
         element={
           <ProtectedRoute role="KITCHEN">
             <KitchenDisplayPage />
