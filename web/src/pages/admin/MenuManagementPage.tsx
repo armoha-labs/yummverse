@@ -158,8 +158,16 @@ function ItemsTab() {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const categories = useQuery({ queryKey: ["categories"], queryFn: () => api.get<Category[]>("/admin/categories") });
   const items = useQuery({ queryKey: ["menu-items"], queryFn: () => api.get<MenuItem[]>("/admin/menu-items") });
+  // Tax is charged per menu item's own Tax % (a GST-style per-item slab) — the tenant-wide
+  // percentage set in Settings is only ever a starting point for items that don't have one
+  // yet, prefilled here rather than defaulting new items to 0%.
+  const tenantSettings = useQuery({
+    queryKey: ["tenant-settings-tax-default"],
+    queryFn: () => api.get<{ tax: { enabled: boolean; percentage: number } }>("/tenant/settings"),
+  });
+  const defaultTaxPercentage = tenantSettings.data?.tax.percentage ?? 0;
 
-  const form = useForm<ItemForm>({ resolver: zodResolver(itemSchema), defaultValues: { taxPercentage: 0 } });
+  const form = useForm<ItemForm>({ resolver: zodResolver(itemSchema), defaultValues: { taxPercentage: defaultTaxPercentage } });
   const editForm = useForm<ItemForm>({ resolver: zodResolver(itemSchema) });
 
   useEffect(() => {
@@ -178,7 +186,7 @@ function ItemsTab() {
     mutationFn: (data: ItemForm) => api.post("/admin/menu-items", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
-      form.reset({ taxPercentage: 0 });
+      form.reset({ taxPercentage: defaultTaxPercentage });
       setOpen(false);
     },
   });
@@ -202,7 +210,13 @@ function ItemsTab() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+          open={open}
+          onOpenChange={(o) => {
+            setOpen(o);
+            if (o) form.reset({ taxPercentage: defaultTaxPercentage });
+          }}
+        >
           <DialogTrigger asChild>
             <Button size="sm">
               <Plus size={15} /> Add Item
@@ -247,6 +261,9 @@ function ItemsTab() {
                 <div className="flex flex-col gap-1.5">
                   <Label>Tax %</Label>
                   <Input type="number" step="0.01" {...form.register("taxPercentage")} />
+                  {defaultTaxPercentage > 0 && (
+                    <div className="text-xs text-text-muted">Defaults to your tax setting ({defaultTaxPercentage}%).</div>
+                  )}
                 </div>
               </div>
               <DialogFooter>
