@@ -40,3 +40,10 @@ export const adminMarkReady = asyncHandler(async (req: Request, res: Response) =
   const order = await orderLifecycleService.ready(tenantId, undefined, id);
   sendSuccess(res, order);
 });
+
+export const adminMarkServed = asyncHandler(async (req: Request, res: Response) => {
+  const tenantId = requireTenantContext(req);
+  const { id } = idParamSchema.parse(req.params);
+  const order = await orderLifecycleService.served(tenantId, undefined, id);
+  sendSuccess(res, order);
+});

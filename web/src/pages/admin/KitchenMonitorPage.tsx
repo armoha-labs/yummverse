@@ -20,7 +20,7 @@ const COLUMNS: { status: OrderRow["orderStatus"]; label: string; action?: string
   { status: "NEW", label: "New", action: "Accept", next: "accept" },
   { status: "ACCEPTED", label: "Accepted", action: "Start Preparing", next: "preparing" },
   { status: "PREPARING", label: "Preparing", action: "Mark Ready", next: "ready" },
-  { status: "READY", label: "Ready", action: undefined, next: undefined },
+  { status: "READY", label: "Ready", action: "Mark Served", next: "served" },
 ];
 
 export default function KitchenMonitorPage() {

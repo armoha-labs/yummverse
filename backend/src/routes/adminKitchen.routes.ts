@@ -12,3 +12,4 @@ adminKitchenRouter.get("/orders", adminKitchenController.listAdminKitchenOrders)
 adminKitchenRouter.post("/orders/:id/accept", adminKitchenController.adminAcceptOrder);
 adminKitchenRouter.post("/orders/:id/preparing", adminKitchenController.adminStartPreparing);
 adminKitchenRouter.post("/orders/:id/ready", adminKitchenController.adminMarkReady);
+adminKitchenRouter.post("/orders/:id/served", adminKitchenController.adminMarkServed);
