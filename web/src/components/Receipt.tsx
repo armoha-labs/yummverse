@@ -37,7 +37,18 @@ export function Receipt({ data, visible }: { data: ReceiptData; visible: boolean
   return (
     <div
       id={RECEIPT_PRINT_AREA_ID}
-      className={`mx-5 mb-8 flex-col gap-2 rounded-2xl border border-border bg-surface p-[18px] shadow-sm2 print:flex print:rounded-none print:border-none print:shadow-none ${visible ? "flex" : "hidden"}`}
+      // Always laid out (never display:none) so printReceipt.ts's scrollHeight measurement
+      // is accurate even when this is "invisible" on screen — display:none would zero it out
+      // before the print media query ever gets a chance to override it back to visible,
+      // causing the printed receipt to split across several under-sized pages. When
+      // `visible` is false it's moved off-canvas via position instead, which keeps it
+      // rendered (and measurable) without showing on screen. A fixed 88mm width, applied in
+      // both states, keeps line-wrapping identical between the on-screen measurement and the
+      // actual print output.
+      className={`flex flex-col gap-2 rounded-2xl border border-border bg-surface p-[18px] shadow-sm2 print:static print:rounded-none print:border-none print:shadow-none ${
+        visible ? "static mx-5 mb-8" : "fixed left-[-9999px] top-0"
+      }`}
+      style={{ width: "88mm" }}
     >
       {data.logoUrl && <img src={data.logoUrl} alt="" className="mx-auto h-10 w-10 rounded object-contain" />}
       <div className="text-center font-display text-base font-extrabold">{data.tenantName}</div>
