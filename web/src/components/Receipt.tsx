@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { ShoppingBag } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 
@@ -28,28 +29,28 @@ export interface ReceiptData {
 
 /** Matches the global `@media print` rule in index.css, which prints only this element. */
 export const RECEIPT_PRINT_AREA_ID = "receipt-print-area";
+const PRINT_ROOT_ID = "print-root";
 
-/** A café's printable receipt (§23A.5's "browser print API for a basic setup") — used both
- * by the customer's order-tracking page and by staff reprinting a bill from the Orders page.
- * `visible` controls on-screen display only; it always renders (and is always printable) so
- * a caller can trigger `window.print()` right after setting the data. */
-export function Receipt({ data, visible }: { data: ReceiptData; visible: boolean }) {
+/** A dedicated DOM node that's a sibling of #root, not a descendant — so the print CSS can
+ * hide the entire app (`#root { display: none }`) with zero leftover layout space, instead
+ * of the old `visibility: hidden` trick, which kept every hidden element's box (the whole
+ * page behind the receipt — sidebar, tables, everything) contributing to the document's
+ * height. Chrome's print engine reflows overflowing content onto extra pages rather than
+ * clipping it, even under `overflow: hidden`, so that leftover height turned into a blank
+ * trailing page. Living outside #root, the receipt is unaffected by hiding it. */
+function getPrintRoot(): HTMLElement {
+  let el = document.getElementById(PRINT_ROOT_ID);
+  if (!el) {
+    el = document.createElement("div");
+    el.id = PRINT_ROOT_ID;
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function ReceiptBody({ data }: { data: ReceiptData }) {
   return (
-    <div
-      id={RECEIPT_PRINT_AREA_ID}
-      // Always laid out (never display:none) so printReceipt.ts's scrollHeight measurement
-      // is accurate even when this is "invisible" on screen — display:none would zero it out
-      // before the print media query ever gets a chance to override it back to visible,
-      // causing the printed receipt to split across several under-sized pages. When
-      // `visible` is false it's moved off-canvas via position instead, which keeps it
-      // rendered (and measurable) without showing on screen. A fixed 88mm width, applied in
-      // both states, keeps line-wrapping identical between the on-screen measurement and the
-      // actual print output.
-      className={`flex flex-col gap-2 rounded-2xl border border-border bg-surface p-[18px] shadow-sm2 print:static print:rounded-none print:border-none print:shadow-none ${
-        visible ? "static mx-5 mb-8" : "fixed left-[-9999px] top-0"
-      }`}
-      style={{ width: "88mm" }}
-    >
+    <>
       {data.logoUrl && <img src={data.logoUrl} alt="" className="mx-auto h-10 w-10 rounded object-contain" />}
       <div className="text-center font-display text-base font-extrabold">{data.tenantName}</div>
       <div className="mb-1 flex items-center justify-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
@@ -85,6 +86,37 @@ export function Receipt({ data, visible }: { data: ReceiptData; visible: boolean
       <div className="mt-1 text-center text-[11px] text-text-muted">
         Payment {data.paid ? "received" : "pending"} &middot; Thank you!
       </div>
-    </div>
+    </>
+  );
+}
+
+/** A café's printable receipt (§23A.5's "browser print API for a basic setup") — used both
+ * by the customer's order-tracking page and by staff reprinting a bill from the Orders page.
+ * `visible` controls an on-screen inline preview only (rendered in its normal place in the
+ * page); the actual printable copy always renders into a separate portal (see getPrintRoot)
+ * so printing never depends on — or is derailed by — whatever else is on screen. */
+export function Receipt({ data, visible }: { data: ReceiptData; visible: boolean }) {
+  return (
+    <>
+      {visible && (
+        <div className="mx-5 mb-8 flex flex-col gap-2 rounded-2xl border border-border bg-surface p-[18px] shadow-sm2">
+          <ReceiptBody data={data} />
+        </div>
+      )}
+      {createPortal(
+        <div
+          id={RECEIPT_PRINT_AREA_ID}
+          // Off-canvas rather than display:none so printReceipt.ts's scrollHeight
+          // measurement is always accurate (a display:none element measures 0). A fixed
+          // 88mm width matches the print CSS's width exactly, so line-wrapping — and thus
+          // the measured height — is identical between measurement time and print time.
+          className="fixed left-[-9999px] top-0 flex flex-col gap-2"
+          style={{ width: "88mm" }}
+        >
+          <ReceiptBody data={data} />
+        </div>,
+        getPrintRoot(),
+      )}
+    </>
   );
 }

@@ -114,8 +114,14 @@ body {
   }
 }
 
-/* Printing a receipt (§23A.5's "browser print API for a basic setup") prints only the
-   element with this id, wherever it appears on the page — everything else is hidden.
+/* Printing a receipt (§23A.5's "browser print API for a basic setup") prints only
+   #receipt-print-area. It's rendered via a React portal (components/Receipt.tsx) into
+   #print-root, a sibling of #root rather than a descendant — so printing can hide the
+   entire app outright (#root { display: none }) instead of the old visibility:hidden trick,
+   which kept every hidden element's layout box intact. Chrome's print engine reflows
+   overflowing content onto extra pages rather than clipping it (even under
+   overflow: hidden), so that leftover — the whole app behind the receipt — was turning into
+   a blank trailing page. display:none has no such leftover: it removes the box entirely.
    Sized for an 88mm thermal receipt printer rather than a full A4/Letter page — width is
    fixed here (real thermal paper), but height is NOT: it's set dynamically per print, from
    the receipt's actual rendered content, by lib/printReceipt.ts injecting a page-size
@@ -124,12 +130,8 @@ body {
    below also overrides the on-screen Tailwind padding (higher specificity) so content isn't
    crammed against the paper's edge. */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  #receipt-print-area,
-  #receipt-print-area * {
-    visibility: visible;
+  #root {
+    display: none;
   }
   #receipt-print-area {
     position: absolute;
