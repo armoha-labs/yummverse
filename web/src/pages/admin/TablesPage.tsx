@@ -95,9 +95,9 @@ export default function TablesPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-extrabold">Tables</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isMultiBranch && (
             <Select value={filterBranchId || "ALL"} onValueChange={(v) => setFilterBranchId(v === "ALL" ? "" : v)}>
               <SelectTrigger className="w-48">
@@ -175,46 +175,50 @@ export default function TablesPage() {
       </div>
 
       <div className="overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
-        <div
-          className={`grid gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted ${isMultiBranch ? "grid-cols-[1fr_140px_120px_140px_160px]" : "grid-cols-[1fr_120px_140px_160px]"}`}
-        >
-          <div>Table</div>
-          {isMultiBranch && <div>Branch</div>}
-          <div>Status</div>
-          <div>Current Order</div>
-          <div>Actions</div>
-        </div>
-        {tables.data?.map((table) => (
-          <div
-            key={table._id}
-            className={`grid items-center gap-2 border-t border-border px-5 py-3 text-sm ${isMultiBranch ? "grid-cols-[1fr_140px_120px_140px_160px]" : "grid-cols-[1fr_120px_140px_160px]"}`}
-          >
-            <div className="font-semibold">Table {table.tableNumber}</div>
-            {isMultiBranch && <div className="text-text-muted">{branchName(table.branchId)}</div>}
-            <Badge variant={table.status === "OCCUPIED" ? "default" : "outline"}>{table.status}</Badge>
-            <div className="text-text-muted">{table.currentOrderId ?? "—"}</div>
-            <div className="flex gap-1">
-              <Button size="icon" variant="ghost" title="View QR" onClick={() => viewQr(table._id)}>
-                <QrCode size={15} />
-              </Button>
-              <Button size="icon" variant="ghost" title="Regenerate QR" onClick={() => regenerate.mutate(table._id)}>
-                <RefreshCw size={15} />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                title="Delete"
-                disabled={Boolean(table.currentOrderId)}
-                onClick={() => {
-                  if (confirm(`Delete Table ${table.tableNumber}?`)) remove.mutate(table._id);
-                }}
-              >
-                <Trash2 size={15} />
-              </Button>
+        <div className="overflow-x-auto">
+          <div className={isMultiBranch ? "min-w-[760px]" : "min-w-[620px]"}>
+            <div
+              className={`grid gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted ${isMultiBranch ? "grid-cols-[1fr_140px_120px_140px_160px]" : "grid-cols-[1fr_120px_140px_160px]"}`}
+            >
+              <div>Table</div>
+              {isMultiBranch && <div>Branch</div>}
+              <div>Status</div>
+              <div>Current Order</div>
+              <div>Actions</div>
             </div>
+            {tables.data?.map((table) => (
+              <div
+                key={table._id}
+                className={`grid items-center gap-2 border-t border-border px-5 py-3 text-sm ${isMultiBranch ? "grid-cols-[1fr_140px_120px_140px_160px]" : "grid-cols-[1fr_120px_140px_160px]"}`}
+              >
+                <div className="font-semibold">Table {table.tableNumber}</div>
+                {isMultiBranch && <div className="text-text-muted">{branchName(table.branchId)}</div>}
+                <Badge variant={table.status === "OCCUPIED" ? "default" : "outline"}>{table.status}</Badge>
+                <div className="text-text-muted">{table.currentOrderId ?? "—"}</div>
+                <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" title="View QR" onClick={() => viewQr(table._id)}>
+                    <QrCode size={15} />
+                  </Button>
+                  <Button size="icon" variant="ghost" title="Regenerate QR" onClick={() => regenerate.mutate(table._id)}>
+                    <RefreshCw size={15} />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    title="Delete"
+                    disabled={Boolean(table.currentOrderId)}
+                    onClick={() => {
+                      if (confirm(`Delete Table ${table.tableNumber}?`)) remove.mutate(table._id);
+                    }}
+                  >
+                    <Trash2 size={15} />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {tables.data?.length === 0 && <div className="px-5 py-8 text-center text-sm text-text-muted">No tables yet.</div>}
           </div>
-        ))}
-        {tables.data?.length === 0 && <div className="px-5 py-8 text-center text-sm text-text-muted">No tables yet.</div>}
+        </div>
       </div>
 
       <Dialog open={Boolean(qrTableId)} onOpenChange={(open) => !open && closeQrDialog()}>

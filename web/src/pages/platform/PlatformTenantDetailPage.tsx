@@ -207,20 +207,20 @@ export default function PlatformTenantDetailPage() {
         <span className="font-semibold text-text">{tenant.data.name}</span>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent font-display text-base font-extrabold text-white">
+          <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-accent font-display text-base font-extrabold text-white">
             {tenant.data.name.slice(0, 2).toUpperCase()}
           </div>
           <div>
             <div className="font-display text-lg font-extrabold">{tenant.data.name}</div>
-            <div className="flex items-center gap-2 text-xs text-text-muted">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
               {tenant.data.slug} · {limits.data.planId} plan ·{" "}
               <Badge variant={STATUS_VARIANT[tenant.data.status]}>{tenant.data.status}</Badge>
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {tenant.data.status !== "ACTIVE" && (
             <Button size="sm" variant="outline" onClick={() => setStatus.mutate("activate")}>
               Activate
@@ -251,8 +251,8 @@ export default function PlatformTenantDetailPage() {
         </div>
       )}
 
-      <div className="flex gap-4">
-        <div className="flex w-80 flex-none flex-col gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row">
+        <div className="flex w-full flex-none flex-col gap-4 lg:w-80">
           <div className="flex flex-col gap-2.5 rounded-card border border-border bg-surface p-[18px] shadow-sm2">
             <div className="font-display text-sm font-bold">Membership</div>
             <Select value={limits.data.planId} onValueChange={(v) => setPlan.mutate(v)}>
@@ -338,53 +338,57 @@ export default function PlatformTenantDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-[1fr_130px_160px] items-center gap-x-4 gap-y-2.5 text-[11px] font-bold uppercase tracking-wide text-text-muted">
-            <div />
-            <div>Plan Default</div>
-            <div>Override</div>
-          </div>
-
-          {FIELDS.map((field) => {
-            const planValue = limits.data!.planDefaults[field.key];
-            const overrideValue = limits.data!.overrides[field.key];
-            const draft = draftOverrides[field.key];
-            return (
-              <div key={field.key} className="grid grid-cols-[1fr_130px_160px] items-center gap-x-4 gap-y-2.5 border-t border-border pt-2.5 text-sm">
-                <div className="font-semibold">{field.label}</div>
-                <div className="text-text-muted">
-                  {field.type === "boolean"
-                    ? planValue
-                      ? "Yes"
-                      : "No"
-                    : (planValue as number) >= 1_000_000
-                      ? "∞"
-                      : (planValue as number)}
-                </div>
-                {field.type === "boolean" ? (
-                  <Select
-                    value={draft ?? (overrideValue === undefined ? "unset" : String(overrideValue))}
-                    onValueChange={(v) => setDraftOverrides((d) => ({ ...d, [field.key]: v === "unset" ? "" : v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unset">Not set</SelectItem>
-                      <SelectItem value="true">Enabled</SelectItem>
-                      <SelectItem value="false">Disabled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    type="number"
-                    placeholder="Not set"
-                    value={draft ?? (overrideValue === undefined ? "" : String(overrideValue))}
-                    onChange={(e) => setDraftOverrides((d) => ({ ...d, [field.key]: e.target.value }))}
-                  />
-                )}
+          <div className="overflow-x-auto">
+            <div className="min-w-[500px]">
+              <div className="grid grid-cols-[1fr_130px_160px] items-center gap-x-4 gap-y-2.5 text-[11px] font-bold uppercase tracking-wide text-text-muted">
+                <div />
+                <div>Plan Default</div>
+                <div>Override</div>
               </div>
-            );
-          })}
+
+              {FIELDS.map((field) => {
+                const planValue = limits.data!.planDefaults[field.key];
+                const overrideValue = limits.data!.overrides[field.key];
+                const draft = draftOverrides[field.key];
+                return (
+                  <div key={field.key} className="grid grid-cols-[1fr_130px_160px] items-center gap-x-4 gap-y-2.5 border-t border-border pt-2.5 text-sm">
+                    <div className="font-semibold">{field.label}</div>
+                    <div className="text-text-muted">
+                      {field.type === "boolean"
+                        ? planValue
+                          ? "Yes"
+                          : "No"
+                        : (planValue as number) >= 1_000_000
+                          ? "∞"
+                          : (planValue as number)}
+                    </div>
+                    {field.type === "boolean" ? (
+                      <Select
+                        value={draft ?? (overrideValue === undefined ? "unset" : String(overrideValue))}
+                        onValueChange={(v) => setDraftOverrides((d) => ({ ...d, [field.key]: v === "unset" ? "" : v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unset">Not set</SelectItem>
+                          <SelectItem value="true">Enabled</SelectItem>
+                          <SelectItem value="false">Disabled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        type="number"
+                        placeholder="Not set"
+                        value={draft ?? (overrideValue === undefined ? "" : String(overrideValue))}
+                        onChange={(e) => setDraftOverrides((d) => ({ ...d, [field.key]: e.target.value }))}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
           <Button className="mt-auto self-start" disabled={saveOverrides.isPending} onClick={() => saveOverrides.mutate()}>
             Save Overrides
@@ -393,7 +397,7 @@ export default function PlatformTenantDetailPage() {
       </div>
 
       <div className="flex flex-col gap-3.5 rounded-card border border-border bg-surface p-[22px] shadow-sm2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="font-display text-sm font-bold">Billing &amp; Invoices</div>
             <div className="mt-1 text-xs text-text-muted">
@@ -406,57 +410,61 @@ export default function PlatformTenantDetailPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-[140px_1fr_120px_100px_120px_200px] items-center gap-2 border-t border-border pt-2.5 text-[11px] font-bold uppercase tracking-wide text-text-muted">
-          <div>Invoice #</div>
-          <div>Period</div>
-          <div>Amount</div>
-          <div>Status</div>
-          <div>Paid</div>
-          <div />
-        </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[900px]">
+            <div className="grid grid-cols-[140px_1fr_120px_100px_120px_200px] items-center gap-2 border-t border-border pt-2.5 text-[11px] font-bold uppercase tracking-wide text-text-muted">
+              <div>Invoice #</div>
+              <div>Period</div>
+              <div>Amount</div>
+              <div>Status</div>
+              <div>Paid</div>
+              <div />
+            </div>
 
-        {invoices.data?.length === 0 && (
-          <div className="py-6 text-center text-sm text-text-muted">No invoices yet — generate one to bill this café for its plan.</div>
-        )}
+            {invoices.data?.length === 0 && (
+              <div className="py-6 text-center text-sm text-text-muted">No invoices yet — generate one to bill this café for its plan.</div>
+            )}
 
-        {invoices.data?.map((invoice) => (
-          <div key={invoice.id} className="grid grid-cols-[140px_1fr_120px_100px_120px_200px] items-center gap-2 border-t border-border pt-2.5 text-sm">
-            <div className="font-semibold">{invoice.invoiceNumber}</div>
-            <div className="text-text-muted">
-              {shortDate(invoice.periodStart)} – {shortDate(invoice.periodEnd)}
-            </div>
-            <div className="font-semibold">{money(invoice.amount, invoice.currency)}</div>
-            <div>
-              <Badge variant={INVOICE_STATUS_VARIANT[invoice.status]}>{invoice.status}</Badge>
-            </div>
-            <div className="text-text-muted">{shortDate(invoice.paidAt)}</div>
-            <div className="flex items-center justify-end gap-1">
-              <Button size="sm" variant="ghost" onClick={() => downloadInvoicePdf(invoice.id)} title="View PDF">
-                <FileText size={14} />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={sendInvoice.isPending}
-                onClick={() => sendInvoice.mutate(invoice.id)}
-                title="Email invoice to café admin"
-              >
-                <Send size={14} />
-              </Button>
-              {invoice.status !== "PAID" && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={markInvoicePaid.isPending}
-                  onClick={() => markInvoicePaid.mutate(invoice.id)}
-                  title="Mark as paid"
-                >
-                  <CircleDollarSign size={14} />
-                </Button>
-              )}
-            </div>
+            {invoices.data?.map((invoice) => (
+              <div key={invoice.id} className="grid grid-cols-[140px_1fr_120px_100px_120px_200px] items-center gap-2 border-t border-border pt-2.5 text-sm">
+                <div className="font-semibold">{invoice.invoiceNumber}</div>
+                <div className="text-text-muted">
+                  {shortDate(invoice.periodStart)} – {shortDate(invoice.periodEnd)}
+                </div>
+                <div className="font-semibold">{money(invoice.amount, invoice.currency)}</div>
+                <div>
+                  <Badge variant={INVOICE_STATUS_VARIANT[invoice.status]}>{invoice.status}</Badge>
+                </div>
+                <div className="text-text-muted">{shortDate(invoice.paidAt)}</div>
+                <div className="flex items-center justify-end gap-1">
+                  <Button size="sm" variant="ghost" onClick={() => downloadInvoicePdf(invoice.id)} title="View PDF">
+                    <FileText size={14} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={sendInvoice.isPending}
+                    onClick={() => sendInvoice.mutate(invoice.id)}
+                    title="Email invoice to café admin"
+                  >
+                    <Send size={14} />
+                  </Button>
+                  {invoice.status !== "PAID" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={markInvoicePaid.isPending}
+                      onClick={() => markInvoicePaid.mutate(invoice.id)}
+                      title="Mark as paid"
+                    >
+                      <CircleDollarSign size={14} />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );

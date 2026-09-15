@@ -76,9 +76,9 @@ export default function ReportsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-extrabold">Reports</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={() => exportReport("csv")}>
             Export CSV
           </Button>
@@ -123,13 +123,13 @@ function RevenueTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Gross Revenue" value={currency(data.grossRevenue)} delta={data.grossRevenueChangePct} />
         <Stat label="Net Revenue" value={currency(data.netRevenue)} />
         <Stat label="Orders" value={data.orderCount} />
         <Stat label="AOV" value={currency(data.averageOrderValue)} />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Panel title="By Payment Method">
           {data.revenueByPaymentMethod.map((m) => (
             <Row key={m.method} label={m.method} value={currency(m.amount)} />
@@ -151,7 +151,7 @@ function TaxTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Stat label="Total Tax Collected" value={currency(data.totalTaxCollected)} />
         <Stat label="Taxable Amount" value={currency(data.taxableOrderAmount)} />
       </div>
@@ -172,7 +172,7 @@ function ItemPerformanceTab() {
   if (!data) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Panel title="Top Sellers">
         {data.topByQuantity.map((item, i) => (
           <Row key={i} label={item.name} value={`×${item.quantitySold} · ${currency(item.revenue)}`} />
@@ -203,46 +203,50 @@ function PaymentsTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Stat label="Total Refunded" value={currency(data.refundTotal)} />
         <Stat label="Refunds Issued" value={data.refundCount} />
       </div>
 
       <div className="overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
-        <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 border-b border-border px-5 py-3 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
-          <div>Transaction ID</div>
-          <div>Amount</div>
-          <div>Refunded</div>
-          <div>Status</div>
-          <div />
-        </div>
-        {data.transactions.map((t) => {
-          const refunded = t.refundedAmount ?? 0;
-          const remaining = Math.round((t.amount - refunded) * 100) / 100;
-          const canRefund = t.status === "PAID" && remaining > 0;
-          return (
-            <div key={t._id} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] items-center gap-3 border-t border-border px-5 py-3 text-sm">
-              <div className="truncate font-mono text-xs text-text-muted" title={t._id}>
-                {t._id}
-              </div>
-              <div className="font-semibold">{currency(t.amount)}</div>
-              <div className="text-text-muted">{refunded > 0 ? currency(refunded) : "—"}</div>
-              <div>
-                <Badge variant={STATUS_VARIANT[t.status]}>{t.status.replace("_", " ")}</Badge>
-              </div>
-              <div>
-                {canRefund && (
-                  <Button size="sm" variant="outline" onClick={() => setRefunding(t)}>
-                    Refund
-                  </Button>
-                )}
-              </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[700px]">
+            <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 border-b border-border px-5 py-3 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+              <div>Transaction ID</div>
+              <div>Amount</div>
+              <div>Refunded</div>
+              <div>Status</div>
+              <div />
             </div>
-          );
-        })}
-        {data.transactions.length === 0 && (
-          <div className="px-5 py-10 text-center text-sm text-text-muted">No transactions in this period.</div>
-        )}
+            {data.transactions.map((t) => {
+              const refunded = t.refundedAmount ?? 0;
+              const remaining = Math.round((t.amount - refunded) * 100) / 100;
+              const canRefund = t.status === "PAID" && remaining > 0;
+              return (
+                <div key={t._id} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] items-center gap-3 border-t border-border px-5 py-3 text-sm">
+                  <div className="truncate font-mono text-xs text-text-muted" title={t._id}>
+                    {t._id}
+                  </div>
+                  <div className="font-semibold">{currency(t.amount)}</div>
+                  <div className="text-text-muted">{refunded > 0 ? currency(refunded) : "—"}</div>
+                  <div>
+                    <Badge variant={STATUS_VARIANT[t.status]}>{t.status.replace("_", " ")}</Badge>
+                  </div>
+                  <div>
+                    {canRefund && (
+                      <Button size="sm" variant="outline" onClick={() => setRefunding(t)}>
+                        Refund
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {data.transactions.length === 0 && (
+              <div className="px-5 py-10 text-center text-sm text-text-muted">No transactions in this period.</div>
+            )}
+          </div>
+        </div>
       </div>
 
       <RefundDialog transaction={refunding} onClose={() => setRefunding(null)} />

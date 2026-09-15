@@ -94,7 +94,7 @@ export default function OrdersPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-extrabold">Orders</h1>
         <Select value={status || "ALL"} onValueChange={(v) => setStatus(v === "ALL" ? "" : v)}>
           <SelectTrigger className="w-48">
@@ -112,60 +112,64 @@ export default function OrdersPage() {
       </div>
 
       <div className="flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
-        <div className="grid grid-cols-[90px_85px_1fr_100px_170px_120px_230px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
-          <div>Order</div>
-          <div>Channel</div>
-          <div>Items</div>
-          <div>Total</div>
-          <div>Status</div>
-          <div>Payment</div>
-          <div />
-        </div>
-        {orders.isLoading && <div className="px-5 py-8 text-center text-sm text-text-muted">Loading…</div>}
-        {orders.data?.length === 0 && (
-          <div className="px-5 py-8 text-center text-sm text-text-muted">No orders match this filter.</div>
-        )}
-        {orders.data?.map((order) => (
-          <div
-            key={order._id}
-            className="grid grid-cols-[90px_85px_1fr_100px_170px_120px_230px] items-center gap-2 border-t border-border px-5 py-3 text-sm"
-          >
-            <div className="font-semibold">#{order.orderNumber}</div>
-            <div className="text-text-muted">{order.channel}</div>
-            <div className="truncate text-text-muted">{order.items.map((i) => `${i.name} ×${i.quantity}`).join(", ")}</div>
-            <div className="font-semibold">{currency(order.totalAmount)}</div>
-            <div>
-              <Badge variant={STATUS_VARIANT[order.orderStatus] ?? "outline"}>{order.orderStatus}</Badge>
+        <div className="overflow-x-auto">
+          <div className="min-w-[1000px]">
+            <div className="grid grid-cols-[90px_85px_1fr_100px_170px_120px_230px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+              <div>Order</div>
+              <div>Channel</div>
+              <div>Items</div>
+              <div>Total</div>
+              <div>Status</div>
+              <div>Payment</div>
+              <div />
             </div>
-            <div className="text-text-muted">{order.paymentStatus}</div>
-            <div className="flex items-center gap-1">
-              {order.paymentStatus !== "PAID" && !NOT_COLLECTIBLE.has(order.orderStatus) && (
-                <Button size="sm" variant="outline" onClick={() => setCollecting(order)}>
-                  Collect Payment
-                </Button>
-              )}
-              {CANCELLABLE.has(order.orderStatus) && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={cancel.isPending}
-                  onClick={() => cancel.mutate(order._id)}
-                >
-                  Cancel
-                </Button>
-              )}
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={printReceipt.isPending}
-                onClick={() => printReceipt.mutate(order._id)}
-                title="Print receipt"
+            {orders.isLoading && <div className="px-5 py-8 text-center text-sm text-text-muted">Loading…</div>}
+            {orders.data?.length === 0 && (
+              <div className="px-5 py-8 text-center text-sm text-text-muted">No orders match this filter.</div>
+            )}
+            {orders.data?.map((order) => (
+              <div
+                key={order._id}
+                className="grid grid-cols-[90px_85px_1fr_100px_170px_120px_230px] items-center gap-2 border-t border-border px-5 py-3 text-sm"
               >
-                <Printer size={14} strokeWidth={2} />
-              </Button>
-            </div>
+                <div className="font-semibold">#{order.orderNumber}</div>
+                <div className="text-text-muted">{order.channel}</div>
+                <div className="truncate text-text-muted">{order.items.map((i) => `${i.name} ×${i.quantity}`).join(", ")}</div>
+                <div className="font-semibold">{currency(order.totalAmount)}</div>
+                <div>
+                  <Badge variant={STATUS_VARIANT[order.orderStatus] ?? "outline"}>{order.orderStatus}</Badge>
+                </div>
+                <div className="text-text-muted">{order.paymentStatus}</div>
+                <div className="flex items-center gap-1">
+                  {order.paymentStatus !== "PAID" && !NOT_COLLECTIBLE.has(order.orderStatus) && (
+                    <Button size="sm" variant="outline" onClick={() => setCollecting(order)}>
+                      Collect Payment
+                    </Button>
+                  )}
+                  {CANCELLABLE.has(order.orderStatus) && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={cancel.isPending}
+                      onClick={() => cancel.mutate(order._id)}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={printReceipt.isPending}
+                    onClick={() => printReceipt.mutate(order._id)}
+                    title="Print receipt"
+                  >
+                    <Printer size={14} strokeWidth={2} />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       <CollectPaymentDialog order={collecting} onClose={() => setCollecting(null)} />

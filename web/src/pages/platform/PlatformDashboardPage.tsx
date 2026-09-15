@@ -21,14 +21,14 @@ export default function PlatformDashboardPage() {
     <div className="flex flex-col gap-5">
       <h1 className="font-display text-2xl font-extrabold">Platform Dashboard</h1>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Total Tenants" value={data?.tenants.total ?? "—"} />
         <Stat label="Active" value={data?.tenants.active ?? "—"} />
         <Stat label="Trial" value={data?.tenants.trial ?? "—"} />
         <Stat label="Suspended" value={data?.tenants.suspended ?? "—"} />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Stat label="Platform-Wide Revenue (30 days)" value={data ? currency(data.last30Days.platformWideRevenue) : "—"} big />
         <Stat label="Orders (30 days)" value={data?.last30Days.orderCount ?? "—"} big />
         <Stat

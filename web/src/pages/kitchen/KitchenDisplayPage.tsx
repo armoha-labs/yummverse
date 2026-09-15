@@ -72,9 +72,9 @@ export default function KitchenDisplayPage() {
 
   return (
     <div className="flex h-screen flex-col bg-bg font-body text-text">
-      <header className="flex items-center justify-between border-b border-border bg-surface px-7 py-4">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 sm:px-7 sm:py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-accent font-display text-[13px] font-extrabold text-white">
+          <div className="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[9px] bg-accent font-display text-[13px] font-extrabold text-white">
             {(branding.data?.name ?? "K").slice(0, 2).toUpperCase()}
           </div>
           <div>
@@ -101,11 +101,11 @@ export default function KitchenDisplayPage() {
         </div>
       </header>
 
-      <div className="grid flex-1 grid-cols-4 gap-4 overflow-hidden p-6">
+      <div className="flex flex-1 gap-4 overflow-x-auto overflow-y-hidden p-4 sm:p-6">
         {COLUMNS.map((col) => {
           const columnOrders = (orders.data ?? []).filter((o) => o.orderStatus === col.status);
           return (
-            <div key={col.status} className="flex min-w-0 flex-col gap-3 overflow-y-auto">
+            <div key={col.status} className="flex w-[280px] min-w-[280px] flex-1 flex-col gap-3 overflow-y-auto lg:w-auto">
               <div className="flex items-center gap-2">
                 <div className="font-display text-[13.5px] font-bold">{col.label}</div>
                 <div className="rounded-full bg-secondary-soft px-2.5 py-0.5 text-[11px] font-bold text-text">

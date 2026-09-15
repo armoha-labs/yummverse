@@ -238,24 +238,28 @@ function ItemsTab() {
       </div>
 
       <div className="overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
-        <div className="grid grid-cols-[1fr_130px_90px_90px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
-          <div>Name</div>
-          <div>Category</div>
-          <div>Price</div>
-          <div>Available</div>
-        </div>
-        {items.data?.map((item) => (
-          <div key={item._id} className="grid grid-cols-[1fr_130px_90px_90px] items-center gap-2 border-t border-border px-5 py-3 text-sm">
-            <div className="font-medium">{item.name}</div>
-            <div className="text-text-muted">{categoryName(item.categoryId)}</div>
-            <div>₹{item.price}</div>
-            <Switch
-              checked={item.isAvailable}
-              onCheckedChange={(checked) => toggleAvailability.mutate({ id: item._id, isAvailable: checked })}
-            />
+        <div className="overflow-x-auto">
+          <div className="min-w-[520px]">
+            <div className="grid grid-cols-[1fr_130px_90px_90px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+              <div>Name</div>
+              <div>Category</div>
+              <div>Price</div>
+              <div>Available</div>
+            </div>
+            {items.data?.map((item) => (
+              <div key={item._id} className="grid grid-cols-[1fr_130px_90px_90px] items-center gap-2 border-t border-border px-5 py-3 text-sm">
+                <div className="font-medium">{item.name}</div>
+                <div className="text-text-muted">{categoryName(item.categoryId)}</div>
+                <div>₹{item.price}</div>
+                <Switch
+                  checked={item.isAvailable}
+                  onCheckedChange={(checked) => toggleAvailability.mutate({ id: item._id, isAvailable: checked })}
+                />
+              </div>
+            ))}
+            {items.data?.length === 0 && <div className="px-5 py-8 text-center text-sm text-text-muted">No items yet.</div>}
           </div>
-        ))}
-        {items.data?.length === 0 && <div className="px-5 py-8 text-center text-sm text-text-muted">No items yet.</div>}
+        </div>
       </div>
     </div>
   );

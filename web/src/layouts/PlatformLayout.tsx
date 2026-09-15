@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Building2 } from "lucide-react";
+import { LayoutDashboard, Building2, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, logout } from "@/lib/auth";
 import { PlatformSidebarArt } from "@/components/PlatformSidebarArt";
@@ -12,6 +13,7 @@ const NAV = [
 export default function PlatformLayout() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const [navOpen, setNavOpen] = useState(false);
 
   async function onLogout() {
     await logout();
@@ -19,8 +21,29 @@ export default function PlatformLayout() {
   }
 
   return (
-    <div className="platform-theme flex min-h-screen bg-bg font-body text-text">
-      <aside className="relative flex w-60 flex-none flex-col gap-1 overflow-hidden bg-sidebar-bg px-4 py-5 text-sidebar-muted">
+    <div className="platform-theme flex min-h-screen flex-col bg-bg font-body text-text lg:flex-row">
+      <header className="flex items-center justify-between border-b border-border bg-sidebar-bg px-4 py-3 lg:hidden">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-accent font-display text-[12px] font-extrabold text-white">
+            Y
+          </div>
+          <div className="font-display text-sm font-bold text-white">Yummverse</div>
+        </div>
+        <button onClick={() => setNavOpen(true)} className="text-sidebar-muted hover:text-white" aria-label="Open menu">
+          <Menu size={22} />
+        </button>
+      </header>
+
+      {navOpen && (
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setNavOpen(false)} aria-hidden="true" />
+      )}
+
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-none -translate-x-full flex-col gap-1 overflow-hidden bg-sidebar-bg px-4 py-5 text-sidebar-muted transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-60 lg:translate-x-0",
+          navOpen && "translate-x-0",
+        )}
+      >
         <PlatformSidebarArt />
 
         <div className="relative flex items-center gap-2.5 px-2 pb-5">
@@ -28,13 +51,21 @@ export default function PlatformLayout() {
             Y
           </div>
           <div className="font-display text-sm font-bold text-white">Yummverse</div>
+          <button
+            onClick={() => setNavOpen(false)}
+            className="relative ml-auto text-sidebar-muted hover:text-white lg:hidden"
+            aria-label="Close menu"
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        <nav className="relative flex flex-col gap-0.5">
+        <nav className="relative flex flex-col gap-0.5 overflow-y-auto">
           {NAV.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
+              onClick={() => setNavOpen(false)}
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13.5px] font-medium text-sidebar-muted",
@@ -60,7 +91,7 @@ export default function PlatformLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-7">
+      <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-7">
         <Outlet />
       </main>
     </div>

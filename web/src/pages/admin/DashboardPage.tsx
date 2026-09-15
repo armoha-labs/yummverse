@@ -69,7 +69,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Revenue (7 days)"
           value={summary.data ? currency(summary.data.last7Days.grossRevenue) : "—"}
@@ -86,32 +86,36 @@ export default function DashboardPage() {
 
       <div className="flex flex-1 flex-col overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
         <div className="border-b border-border px-5 py-4 font-display text-sm font-bold">Live Orders</div>
-        <div className="grid grid-cols-[90px_1fr_100px_170px_90px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
-          <div>Order</div>
-          <div>Items</div>
-          <div>Total</div>
-          <div>Status</div>
-          <div>Time</div>
-        </div>
-        {recentOrders.length === 0 && (
-          <div className="px-5 py-8 text-center text-sm text-text-muted">No orders yet.</div>
-        )}
-        {recentOrders.map((order) => (
-          <div
-            key={order._id}
-            className="grid grid-cols-[90px_1fr_100px_170px_90px] gap-2 items-center border-t border-border px-5 py-3 text-sm"
-          >
-            <div className="font-semibold">#{order.orderNumber}</div>
-            <div className="truncate text-text-muted">
-              {order.items.map((i) => `${i.name} ×${i.quantity}`).join(", ")}
+        <div className="overflow-x-auto">
+          <div className="min-w-[650px]">
+            <div className="grid grid-cols-[90px_1fr_100px_170px_90px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+              <div>Order</div>
+              <div>Items</div>
+              <div>Total</div>
+              <div>Status</div>
+              <div>Time</div>
             </div>
-            <div className="font-semibold">{currency(order.totalAmount)}</div>
-            <div>
-              <Badge variant={STATUS_VARIANT[order.orderStatus] ?? "outline"}>{order.orderStatus}</Badge>
-            </div>
-            <div className="text-text-muted">{new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+            {recentOrders.length === 0 && (
+              <div className="px-5 py-8 text-center text-sm text-text-muted">No orders yet.</div>
+            )}
+            {recentOrders.map((order) => (
+              <div
+                key={order._id}
+                className="grid grid-cols-[90px_1fr_100px_170px_90px] gap-2 items-center border-t border-border px-5 py-3 text-sm"
+              >
+                <div className="font-semibold">#{order.orderNumber}</div>
+                <div className="truncate text-text-muted">
+                  {order.items.map((i) => `${i.name} ×${i.quantity}`).join(", ")}
+                </div>
+                <div className="font-semibold">{currency(order.totalAmount)}</div>
+                <div>
+                  <Badge variant={STATUS_VARIANT[order.orderStatus] ?? "outline"}>{order.orderStatus}</Badge>
+                </div>
+                <div className="text-text-muted">{new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );

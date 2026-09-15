@@ -63,7 +63,7 @@ export default function BranchesPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-extrabold">Branches</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -102,35 +102,39 @@ export default function BranchesPage() {
       </div>
 
       <div className="overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
-        <div className="grid grid-cols-[1fr_1fr_100px_100px_120px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
-          <div>Name</div>
-          <div>City</div>
-          <div>Status</div>
-          <div />
-          <div />
-        </div>
-        {branches.data?.map((branch) => (
-          <div
-            key={branch._id}
-            className="grid grid-cols-[1fr_1fr_100px_100px_120px] items-center gap-2 border-t border-border px-5 py-3 text-sm"
-          >
-            <div className="font-medium">
-              {branch.name} {branch.isDefault && <Badge variant="secondary">Default</Badge>}
+        <div className="overflow-x-auto">
+          <div className="min-w-[720px]">
+            <div className="grid grid-cols-[1fr_1fr_100px_100px_120px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+              <div>Name</div>
+              <div>City</div>
+              <div>Status</div>
+              <div />
+              <div />
             </div>
-            <div className="text-text-muted">{branch.address?.city ?? "—"}</div>
-            <Badge variant={branch.status === "ACTIVE" ? "success" : "outline"}>{branch.status}</Badge>
-            <Button size="sm" variant="ghost" onClick={() => setSettingsBranch(branch)}>
-              <Settings2 size={14} /> Settings
-            </Button>
-            <div>
-              {!branch.isDefault && branch.status === "ACTIVE" && (
-                <Button size="sm" variant="ghost" onClick={() => deactivate.mutate(branch._id)}>
-                  Deactivate
+            {branches.data?.map((branch) => (
+              <div
+                key={branch._id}
+                className="grid grid-cols-[1fr_1fr_100px_100px_120px] items-center gap-2 border-t border-border px-5 py-3 text-sm"
+              >
+                <div className="font-medium">
+                  {branch.name} {branch.isDefault && <Badge variant="secondary">Default</Badge>}
+                </div>
+                <div className="text-text-muted">{branch.address?.city ?? "—"}</div>
+                <Badge variant={branch.status === "ACTIVE" ? "success" : "outline"}>{branch.status}</Badge>
+                <Button size="sm" variant="ghost" onClick={() => setSettingsBranch(branch)}>
+                  <Settings2 size={14} /> Settings
                 </Button>
-              )}
-            </div>
+                <div>
+                  {!branch.isDefault && branch.status === "ACTIVE" && (
+                    <Button size="sm" variant="ghost" onClick={() => deactivate.mutate(branch._id)}>
+                      Deactivate
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       <BranchSettingsDialog branch={settingsBranch} onClose={() => setSettingsBranch(null)} />

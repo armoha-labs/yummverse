@@ -235,7 +235,7 @@ function BrandingTab() {
         <div className="text-xs text-text-muted">Recommended: square PNG/SVG, max 1MB</div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label>Primary Color</Label>
           <Input value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} placeholder="#4B2E2B" />

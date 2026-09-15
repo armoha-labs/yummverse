@@ -171,11 +171,11 @@ export default function PosOrderPage() {
   }
 
   return (
-    <div className="flex gap-5">
+    <div className="flex flex-col gap-5 lg:flex-row">
       <div className="flex flex-1 flex-col gap-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-2xl font-extrabold">New Counter Order</h1>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {isMultiBranch && (
               <Select value={effectiveBranchId} onValueChange={setBranchId}>
                 <SelectTrigger className="w-44">
@@ -228,7 +228,7 @@ export default function PosOrderPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
           {filtered.map((item) => {
             const line = cart.find((l) => l.menuItemId === item.id);
             return (
@@ -259,12 +259,12 @@ export default function PosOrderPage() {
             );
           })}
           {menu.isSuccess && filtered.length === 0 && (
-            <div className="col-span-3 py-10 text-center text-sm text-text-muted">No items in this category.</div>
+            <div className="col-span-full py-10 text-center text-sm text-text-muted">No items in this category.</div>
           )}
         </div>
       </div>
 
-      <div className="flex w-72 flex-none flex-col gap-3 rounded-card border border-border bg-surface p-[18px] shadow-sm2">
+      <div className="flex w-full flex-none flex-col gap-3 rounded-card border border-border bg-surface p-[18px] shadow-sm2 lg:w-72">
         <div className="flex items-center gap-2 font-display text-sm font-bold">
           <ShoppingCart size={16} strokeWidth={1.75} /> Order ({cartCount})
         </div>

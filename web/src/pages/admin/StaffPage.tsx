@@ -67,9 +67,9 @@ export default function StaffPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-extrabold">Staff</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select value={roleFilter || "ALL"} onValueChange={(v) => setRoleFilter(v === "ALL" ? "" : v)}>
             <SelectTrigger className="w-36">
               <SelectValue />
@@ -147,27 +147,31 @@ export default function StaffPage() {
       </div>
 
       <div className="overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
-        <div className="grid grid-cols-[1fr_80px_1fr_130px_90px_100px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
-          <div>Name</div>
-          <div>Role</div>
-          <div>Email</div>
-          <div>Branch</div>
-          <div>Status</div>
-          <div />
-        </div>
-        {staff.data?.map((member) => (
-          <div key={member._id} className="grid grid-cols-[1fr_80px_1fr_130px_90px_100px] items-center gap-2 border-t border-border px-5 py-3 text-sm">
-            <div className="font-medium">{member.name}</div>
-            <div className="text-text-muted">{member.role}</div>
-            <div className="truncate text-text-muted">{member.email}</div>
-            <div className="text-text-muted">{branchName(member.branchId)}</div>
-            <Badge variant={member.active ? "success" : "outline"}>{member.active ? "Active" : "Inactive"}</Badge>
-            <Button size="sm" variant="ghost" onClick={() => setActive.mutate({ id: member._id, active: !member.active })}>
-              {member.active ? "Deactivate" : "Activate"}
-            </Button>
+        <div className="overflow-x-auto">
+          <div className="min-w-[820px]">
+            <div className="grid grid-cols-[1fr_80px_1fr_130px_90px_100px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+              <div>Name</div>
+              <div>Role</div>
+              <div>Email</div>
+              <div>Branch</div>
+              <div>Status</div>
+              <div />
+            </div>
+            {staff.data?.map((member) => (
+              <div key={member._id} className="grid grid-cols-[1fr_80px_1fr_130px_90px_100px] items-center gap-2 border-t border-border px-5 py-3 text-sm">
+                <div className="font-medium">{member.name}</div>
+                <div className="text-text-muted">{member.role}</div>
+                <div className="truncate text-text-muted">{member.email}</div>
+                <div className="text-text-muted">{branchName(member.branchId)}</div>
+                <Badge variant={member.active ? "success" : "outline"}>{member.active ? "Active" : "Inactive"}</Badge>
+                <Button size="sm" variant="ghost" onClick={() => setActive.mutate({ id: member._id, active: !member.active })}>
+                  {member.active ? "Deactivate" : "Activate"}
+                </Button>
+              </div>
+            ))}
+            {staff.data?.length === 0 && <div className="px-5 py-8 text-center text-sm text-text-muted">No staff yet.</div>}
           </div>
-        ))}
-        {staff.data?.length === 0 && <div className="px-5 py-8 text-center text-sm text-text-muted">No staff yet.</div>}
+        </div>
       </div>
     </div>
   );

@@ -102,7 +102,7 @@ export default function PaymentSettingsPage() {
       <h1 className="font-display text-2xl font-extrabold">Payment Settings</h1>
 
       {isMultiBranch && (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Label>Configuring for</Label>
           <Select value={branchId || "TENANT"} onValueChange={(v) => setBranchId(v === "TENANT" ? "" : v)}>
             <SelectTrigger className="w-56">
@@ -182,7 +182,7 @@ export default function PaymentSettingsPage() {
           </div>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" disabled={testConnection.isPending} onClick={() => testConnection.mutate()}>
             Test Connection
           </Button>

@@ -102,7 +102,7 @@ export default function PlatformTenantsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-extrabold">Tenants</h1>
         <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : closeDialog())}>
           <DialogTrigger asChild>
@@ -197,7 +197,7 @@ export default function PlatformTenantsPage() {
         </Dialog>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {[
           { key: "", label: `All (${counts.ALL})` },
           { key: "ACTIVE", label: `Active (${counts.ACTIVE})` },
@@ -217,35 +217,39 @@ export default function PlatformTenantsPage() {
       </div>
 
       <div className="overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
-        <div className="grid grid-cols-[1fr_110px_100px_90px_100px] gap-2 px-5 py-2.5 text-[11px] font-bold uppercase tracking-wide text-text-muted">
-          <div>Tenant</div>
-          <div>Plan</div>
-          <div>Status</div>
-          <div>Since</div>
-          <div />
-        </div>
-        {filtered.map((tenant) => (
-          <div key={tenant._id} className="grid grid-cols-[1fr_110px_100px_90px_100px] items-center gap-2 border-t border-border px-5 py-3.5 text-sm">
-            <div className="flex items-center gap-2.5 font-semibold">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent font-display text-[10px] font-extrabold text-white">
-                {tenant.name.slice(0, 2).toUpperCase()}
+        <div className="overflow-x-auto">
+          <div className="min-w-[620px]">
+            <div className="grid grid-cols-[1fr_110px_100px_90px_100px] gap-2 px-5 py-2.5 text-[11px] font-bold uppercase tracking-wide text-text-muted">
+              <div>Tenant</div>
+              <div>Plan</div>
+              <div>Status</div>
+              <div>Since</div>
+              <div />
+            </div>
+            {filtered.map((tenant) => (
+              <div key={tenant._id} className="grid grid-cols-[1fr_110px_100px_90px_100px] items-center gap-2 border-t border-border px-5 py-3.5 text-sm">
+                <div className="flex items-center gap-2.5 font-semibold">
+                  <div className="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-accent font-display text-[10px] font-extrabold text-white">
+                    {tenant.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <span className="truncate">{tenant.name}</span>
+                </div>
+                <div className="text-text-muted">{tenant.subscription?.planId ?? "FREE"}</div>
+                <div className="flex items-center gap-1.5">
+                  <Badge variant={STATUS_VARIANT[tenant.status]}>{tenant.status}</Badge>
+                  {isRenewalDueSoon(tenant) && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-danger" title="Renewal due soon" />
+                  )}
+                </div>
+                <div className="text-text-muted">{new Date(tenant.createdAt).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
+                <Link to={`/platform/tenants/${tenant._id}`} className="text-xs font-semibold text-accent">
+                  View →
+                </Link>
               </div>
-              {tenant.name}
-            </div>
-            <div className="text-text-muted">{tenant.subscription?.planId ?? "FREE"}</div>
-            <div className="flex items-center gap-1.5">
-              <Badge variant={STATUS_VARIANT[tenant.status]}>{tenant.status}</Badge>
-              {isRenewalDueSoon(tenant) && (
-                <span className="h-1.5 w-1.5 rounded-full bg-danger" title="Renewal due soon" />
-              )}
-            </div>
-            <div className="text-text-muted">{new Date(tenant.createdAt).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
-            <Link to={`/platform/tenants/${tenant._id}`} className="text-xs font-semibold text-accent">
-              View →
-            </Link>
+            ))}
+            {filtered.length === 0 && <div className="px-5 py-8 text-center text-sm text-text-muted">No tenants match this filter.</div>}
           </div>
-        ))}
-        {filtered.length === 0 && <div className="px-5 py-8 text-center text-sm text-text-muted">No tenants match this filter.</div>}
+        </div>
       </div>
     </div>
   );

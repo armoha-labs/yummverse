@@ -41,7 +41,7 @@ export default function KitchenMonitorPage() {
     <div className="flex flex-col gap-5">
       <h1 className="font-display text-2xl font-extrabold">Kitchen Monitor</h1>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {COLUMNS.map((col) => {
           const columnOrders = (orders.data ?? []).filter((o) => o.orderStatus === col.status);
           return (
