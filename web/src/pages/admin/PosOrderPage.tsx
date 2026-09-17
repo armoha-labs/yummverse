@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { Minus, Plus, Search, ShoppingCart, X } from "lucide-react";
 import { api, ApiError } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Branch {
@@ -57,6 +58,7 @@ export default function PosOrderPage() {
   const [branchId, setBranchId] = useState("");
   const [tableId, setTableId] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [createdOrder, setCreatedOrder] = useState<CreatedOrder | null>(null);
   const [method, setMethod] = useState<"CASH" | "POS_CARD">("CASH");
@@ -78,7 +80,13 @@ export default function PosOrderPage() {
     enabled: Boolean(effectiveBranchId),
   });
 
-  const filtered = (menu.data ?? []).filter((item) => selectedCategory === "all" || item.categoryId === selectedCategory);
+  const searching = search.trim().length > 0;
+  const filtered = (menu.data ?? []).filter((item) => {
+    // A search query searches the whole menu regardless of the category tab — a cashier
+    // looking up an item shouldn't have to first find the right tab.
+    if (searching) return item.name.toLowerCase().includes(search.trim().toLowerCase());
+    return selectedCategory === "all" || item.categoryId === selectedCategory;
+  });
 
   function addItem(item: MenuItem) {
     setCart((c) => {
@@ -206,7 +214,26 @@ export default function PosOrderPage() {
           </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="relative">
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search menu items…"
+            className="pl-9 pr-9"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
+              aria-label="Clear search"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
+
+        <div className={`flex gap-2 overflow-x-auto pb-1 ${searching ? "pointer-events-none opacity-40" : ""}`}>
           <button
             onClick={() => setSelectedCategory("all")}
             className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold ${
@@ -259,7 +286,9 @@ export default function PosOrderPage() {
             );
           })}
           {menu.isSuccess && filtered.length === 0 && (
-            <div className="col-span-full py-10 text-center text-sm text-text-muted">No items in this category.</div>
+            <div className="col-span-full py-10 text-center text-sm text-text-muted">
+              {searching ? `No items match "${search.trim()}".` : "No items in this category."}
+            </div>
           )}
         </div>
       </div>
