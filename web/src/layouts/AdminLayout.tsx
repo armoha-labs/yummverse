@@ -111,7 +111,11 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg font-body text-text lg:flex-row">
+    // h-screen (not min-h-screen) so <main>'s overflow-y-auto is an actual bounded scroll
+    // container — with only a min-height, main just grew to fit its content and the whole
+    // document scrolled instead, which meant nothing nested inside main (a sticky cart
+    // summary, for instance) had a real scrollport to stick against.
+    <div className="flex h-screen flex-col bg-bg font-body text-text lg:flex-row">
       <header className="flex items-center justify-between border-b border-border bg-sidebar-bg px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2.5">
           {branding.data?.branding?.logoUrl ? (

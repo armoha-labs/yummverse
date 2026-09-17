@@ -21,7 +21,9 @@ export default function PlatformLayout() {
   }
 
   return (
-    <div className="platform-theme flex min-h-screen flex-col bg-bg font-body text-text lg:flex-row">
+    // h-screen (not min-h-screen) — see AdminLayout.tsx for why: only a min-height lets main
+    // grow to fit its content instead of being a real bounded scroll container.
+    <div className="platform-theme flex h-screen flex-col bg-bg font-body text-text lg:flex-row">
       <header className="flex items-center justify-between border-b border-border bg-sidebar-bg px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-accent font-display text-[12px] font-extrabold text-white">

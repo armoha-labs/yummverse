@@ -293,7 +293,11 @@ export default function PosOrderPage() {
         </div>
       </div>
 
-      <div className="flex w-full flex-none flex-col gap-3 rounded-card border border-border bg-surface p-[18px] shadow-sm2 lg:w-72">
+      {/* order-first so the total/Place Order button is reachable without scrolling past the
+          whole menu grid on mobile (below lg, this panel stacks under the menu in DOM order);
+          sticky keeps it in view while scrolling either the menu grid below it (mobile) or a
+          long cart (desktop's side column). */}
+      <div className="sticky top-0 z-10 order-first flex max-h-[calc(100vh-2rem)] w-full flex-none flex-col gap-3 rounded-card border border-border bg-surface p-[18px] shadow-sm2 lg:order-none lg:w-72">
         <div className="flex items-center gap-2 font-display text-sm font-bold">
           <ShoppingCart size={16} strokeWidth={1.75} /> Order ({cartCount})
         </div>
