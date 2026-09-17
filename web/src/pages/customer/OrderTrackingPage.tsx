@@ -44,6 +44,8 @@ interface OrderDetail extends OrderStatusResponse {
   items: OrderItem[];
   subtotal: number;
   taxAmount: number;
+  cgstAmount: number;
+  sgstAmount: number;
   serviceCharge: number;
   totalAmount: number;
   createdAt: string;
@@ -250,6 +252,8 @@ export default function OrderTrackingPage() {
             subtitle: `Table ${auth?.tableNumber ?? ""}`,
             items: detail.data.items,
             taxAmount: detail.data.taxAmount,
+            cgstAmount: detail.data.cgstAmount,
+            sgstAmount: detail.data.sgstAmount,
             serviceCharge: detail.data.serviceCharge,
             totalAmount: detail.data.totalAmount,
             paid: current.paymentStatus === "PAID",

@@ -21,6 +21,10 @@ export interface ReceiptData {
   subtitle: string;
   items: ReceiptItem[];
   taxAmount: number;
+  /** CGST/SGST — India's GST split for intra-state supply. Optional so callers on an older
+   * order shape still render (falling back to an even split of taxAmount below). */
+  cgstAmount?: number;
+  sgstAmount?: number;
   serviceCharge: number;
   totalAmount: number;
   paid: boolean;
@@ -72,8 +76,15 @@ function ReceiptBody({ data }: { data: ReceiptData }) {
       ))}
       <div className="h-px bg-border" />
       <div className="flex justify-between text-[13px] text-text-muted">
-        <span>Tax</span>
-        <span>{formatMoney(data.taxAmount, data.currency)}</span>
+        <span>CGST</span>
+        {/* || not ?? — a pre-GST-split order has cgstAmount 0 (schema default) despite a real
+            taxAmount, so fall back to an even split; when tax is genuinely 0 the fallback is
+            also 0, so this is safe either way. */}
+        <span>{formatMoney(data.cgstAmount || data.taxAmount / 2, data.currency)}</span>
+      </div>
+      <div className="flex justify-between text-[13px] text-text-muted">
+        <span>SGST</span>
+        <span>{formatMoney(data.sgstAmount || data.taxAmount / 2, data.currency)}</span>
       </div>
       <div className="flex justify-between text-[13px] text-text-muted">
         <span>Service Charge</span>

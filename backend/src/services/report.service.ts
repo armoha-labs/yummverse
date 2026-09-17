@@ -140,15 +140,30 @@ export const reportService = {
       branchNameMap(tenantId),
     ]);
 
+    // CGST/SGST are always an exact even split of taxAmount (orderCalculation.service.ts) —
+    // derived here from the aggregated total rather than summed from each order's own
+    // cgstAmount/sgstAmount fields, so orders placed before that split was introduced (which
+    // have no such fields) still report a correct, consistent breakdown.
+    const totalTaxCollected = totals[0]?.taxCollected ?? 0;
+    const totalCgst = Math.round((totalTaxCollected / 2) * 100) / 100;
+
     return {
-      totalTaxCollected: totals[0]?.taxCollected ?? 0,
+      totalTaxCollected,
+      totalCgstCollected: totalCgst,
+      totalSgstCollected: Math.round((totalTaxCollected - totalCgst) * 100) / 100,
       taxableOrderAmount: totals[0]?.taxableAmount ?? 0,
-      byRate: byRate.map((r) => ({
-        ratePercentage: r._id,
-        taxableAmount: r.taxableAmount,
-        taxCollected: Math.round(r.taxCollected * 100) / 100,
-        orderCount: r.orderIds.length,
-      })),
+      byRate: byRate.map((r) => {
+        const taxCollected = Math.round(r.taxCollected * 100) / 100;
+        const cgstCollected = Math.round((taxCollected / 2) * 100) / 100;
+        return {
+          ratePercentage: r._id,
+          taxableAmount: r.taxableAmount,
+          taxCollected,
+          cgstCollected,
+          sgstCollected: Math.round((taxCollected - cgstCollected) * 100) / 100,
+          orderCount: r.orderIds.length,
+        };
+      }),
       byBranch: byBranch.map((b) => ({
         branchId: b._id,
         branchName: branchNames.get(b._id?.toString()) ?? "Unknown Branch",

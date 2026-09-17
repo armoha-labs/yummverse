@@ -12,7 +12,7 @@ export type ReportType = (typeof REPORT_TYPES)[number];
 
 const REPORT_TITLES: Record<ReportType, string> = {
   revenue: "Revenue Report",
-  tax: "Tax Report",
+  tax: "GST Report",
   "item-performance": "Item Performance Report",
   orders: "Orders Report",
   payments: "Payments Report",
@@ -87,6 +87,8 @@ async function rowsForReport(tenantId: string, reportType: ReportType, range: Re
         ratePercentage: r.ratePercentage,
         taxableAmount: r.taxableAmount,
         taxCollected: r.taxCollected,
+        cgstCollected: r.cgstCollected,
+        sgstCollected: r.sgstCollected,
         orderCount: r.orderCount,
       }));
     }

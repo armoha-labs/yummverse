@@ -26,6 +26,8 @@ interface OrderDetail {
   channel: "QR" | "POS";
   items: { name: string; quantity: number; total: number; note?: string }[];
   taxAmount: number;
+  cgstAmount: number;
+  sgstAmount: number;
   serviceCharge: number;
   totalAmount: number;
   paymentStatus: string;
@@ -185,6 +187,8 @@ export default function OrdersPage() {
             subtitle: printing.channel === "QR" ? "QR Order" : "POS",
             items: printing.items,
             taxAmount: printing.taxAmount,
+            cgstAmount: printing.cgstAmount,
+            sgstAmount: printing.sgstAmount,
             serviceCharge: printing.serviceCharge,
             totalAmount: printing.totalAmount,
             paid: printing.paymentStatus === "PAID",

@@ -81,6 +81,10 @@ export async function resolveOrderLines(
 export interface OrderTotals {
   subtotal: number;
   taxAmount: number;
+  /** taxAmount split into GST's CGST + SGST components (Indian intra-state supply — the
+   * standard case for a single dine-in/takeaway café). Always sums back to taxAmount. */
+  cgstAmount: number;
+  sgstAmount: number;
   serviceCharge: number;
   totalAmount: number;
 }
@@ -133,6 +137,11 @@ export function calculateOrderTotals(
     ? round2(lines.reduce((sum, line) => sum + (line.unitPrice * line.quantity * line.taxPercentage) / 100, 0))
     : 0;
 
+  // Split evenly between CGST and SGST — round the first half and give the second half
+  // whatever remains, so they always sum back to taxAmount exactly even on an odd paisa.
+  const cgstAmount = round2(taxAmount / 2);
+  const sgstAmount = round2(taxAmount - cgstAmount);
+
   const serviceCharge = rates.serviceCharge.enabled
     ? round2((subtotal * rates.serviceCharge.percentage) / 100)
     : 0;
@@ -140,6 +149,8 @@ export function calculateOrderTotals(
   return {
     subtotal,
     taxAmount,
+    cgstAmount,
+    sgstAmount,
     serviceCharge,
     totalAmount: round2(subtotal + taxAmount + serviceCharge),
   };

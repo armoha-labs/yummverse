@@ -69,6 +69,8 @@ describe("customer ordering", () => {
     expect(order.status).toBe(201);
     expect(order.body.data.subtotal).toBe(300);
     expect(order.body.data.taxAmount).toBe(15); // 300 * 5%
+    expect(order.body.data.cgstAmount).toBe(7.5);
+    expect(order.body.data.sgstAmount).toBe(7.5);
     expect(order.body.data.serviceCharge).toBe(0);
     expect(order.body.data.totalAmount).toBe(315);
     expect(order.body.data.orderStatus).toBe("PENDING_PAYMENT");
@@ -85,6 +87,8 @@ describe("customer ordering", () => {
       .send({ customerName: "Priya", items: [{ menuItemId: item.body.data._id, quantity: 1 }] });
 
     expect(order.body.data.taxAmount).toBe(0);
+    expect(order.body.data.cgstAmount).toBe(0);
+    expect(order.body.data.sgstAmount).toBe(0);
     expect(order.body.data.totalAmount).toBe(150);
   });
 

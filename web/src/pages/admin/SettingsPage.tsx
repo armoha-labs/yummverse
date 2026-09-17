@@ -103,15 +103,23 @@ function OperationsTab() {
   return (
     <div className="flex flex-col gap-4 rounded-card border border-border bg-surface p-6 shadow-sm2">
       <ToggleRow
-        label="Tax"
+        label="GST"
         checked={s.tax.enabled}
         onCheckedChange={(enabled) => save.mutate({ tax: { ...s.tax, enabled } })}
       />
       {s.tax.enabled && (
-        <PercentageInput
-          value={s.tax.percentage}
-          onSave={(percentage) => save.mutate({ tax: { ...s.tax, percentage } })}
-        />
+        <>
+          <PercentageInput
+            value={s.tax.percentage}
+            onSave={(percentage) => save.mutate({ tax: { ...s.tax, percentage } })}
+          />
+          <div className="-mt-2 pl-0 text-xs text-text-muted">
+            Applied as CGST + SGST, split evenly. This rate is only the starting point for
+            menu items you add from now on — each item has its own GST % (Menu → Items), since
+            different dishes can carry different GST slabs. Existing items keep whatever rate
+            they already have.
+          </div>
+        </>
       )}
       <ToggleRow
         label="Service Charge"

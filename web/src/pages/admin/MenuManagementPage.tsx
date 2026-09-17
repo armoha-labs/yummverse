@@ -259,10 +259,10 @@ function ItemsTab() {
                   <Input type="number" step="0.01" {...form.register("price")} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label>Tax %</Label>
+                  <Label>GST %</Label>
                   <Input type="number" step="0.01" {...form.register("taxPercentage")} />
                   {defaultTaxPercentage > 0 && (
-                    <div className="text-xs text-text-muted">Defaults to your tax setting ({defaultTaxPercentage}%).</div>
+                    <div className="text-xs text-text-muted">Defaults to your GST setting ({defaultTaxPercentage}%).</div>
                   )}
                 </div>
               </div>
@@ -347,7 +347,7 @@ function ItemsTab() {
                 <Input type="number" step="0.01" {...editForm.register("price")} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label>Tax %</Label>
+                <Label>GST %</Label>
                 <Input type="number" step="0.01" {...editForm.register("taxPercentage")} />
               </div>
             </div>

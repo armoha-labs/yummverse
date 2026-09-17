@@ -19,8 +19,17 @@ interface RevenueReport {
 
 interface TaxReport {
   totalTaxCollected: number;
+  totalCgstCollected: number;
+  totalSgstCollected: number;
   taxableOrderAmount: number;
-  byRate: { ratePercentage: number; taxableAmount: number; taxCollected: number; orderCount: number }[];
+  byRate: {
+    ratePercentage: number;
+    taxableAmount: number;
+    taxCollected: number;
+    cgstCollected: number;
+    sgstCollected: number;
+    orderCount: number;
+  }[];
 }
 
 interface ItemPerformanceReport {
@@ -53,7 +62,7 @@ function currency(n: number): string {
 
 const REPORT_TYPES = [
   { value: "revenue", label: "Revenue" },
-  { value: "tax", label: "Tax" },
+  { value: "tax", label: "GST" },
   { value: "item-performance", label: "Item Performance" },
   { value: "payments", label: "Payments" },
 ] as const;
@@ -151,13 +160,19 @@ function TaxTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Stat label="Total Tax Collected" value={currency(data.totalTaxCollected)} />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat label="Total GST Collected" value={currency(data.totalTaxCollected)} />
+        <Stat label="CGST" value={currency(data.totalCgstCollected)} />
+        <Stat label="SGST" value={currency(data.totalSgstCollected)} />
         <Stat label="Taxable Amount" value={currency(data.taxableOrderAmount)} />
       </div>
       <Panel title="By Rate">
         {data.byRate.map((r) => (
-          <Row key={r.ratePercentage} label={`${r.ratePercentage}%`} value={`${currency(r.taxCollected)} · ${r.orderCount} orders`} />
+          <Row
+            key={r.ratePercentage}
+            label={`${r.ratePercentage}%`}
+            value={`${currency(r.taxCollected)} (CGST ${currency(r.cgstCollected)} + SGST ${currency(r.sgstCollected)}) · ${r.orderCount} orders`}
+          />
         ))}
       </Panel>
     </div>
@@ -362,9 +377,9 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between border-t border-border px-5 py-2.5 text-sm first:border-t-0">
+    <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-2.5 text-sm first:border-t-0">
       <div className="truncate text-text-muted">{label}</div>
-      <div className="font-semibold">{value}</div>
+      <div className="min-w-0 text-right font-semibold">{value}</div>
     </div>
   );
 }

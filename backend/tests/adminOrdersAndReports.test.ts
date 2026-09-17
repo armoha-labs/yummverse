@@ -181,7 +181,11 @@ describe("reports (§46)", () => {
       .set("Authorization", `Bearer ${accessToken}`);
     expect(tax.status).toBe(200);
     expect(tax.body.data.totalTaxCollected).toBe(5); // 100 * 5%
+    expect(tax.body.data.totalCgstCollected).toBe(2.5);
+    expect(tax.body.data.totalSgstCollected).toBe(2.5);
     expect(tax.body.data.byRate[0].ratePercentage).toBe(5);
+    expect(tax.body.data.byRate[0].cgstCollected).toBe(2.5);
+    expect(tax.body.data.byRate[0].sgstCollected).toBe(2.5);
 
     const items = await request(app)
       .get("/api/v1/tenant/reports/item-performance")

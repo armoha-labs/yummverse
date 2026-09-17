@@ -49,9 +49,15 @@ export interface PdfReportHeader {
   logo?: Buffer;
 }
 
+const ACRONYMS = ["cgst", "sgst", "gst"];
+
 function humanizeHeader(key: string): string {
   // camelCase -> "Camel Case"
-  return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase());
+  const spaced = key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase());
+  return spaced
+    .split(" ")
+    .map((word) => (ACRONYMS.includes(word.toLowerCase()) ? word.toUpperCase() : word))
+    .join(" ");
 }
 
 function formatDate(d: Date): string {

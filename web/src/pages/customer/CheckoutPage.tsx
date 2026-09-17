@@ -13,6 +13,8 @@ interface CreatedOrder {
   orderNumber: number;
   subtotal: number;
   taxAmount: number;
+  cgstAmount: number;
+  sgstAmount: number;
   serviceCharge: number;
   totalAmount: number;
   orderStatus: string;
@@ -174,7 +176,8 @@ export default function CheckoutPage() {
           {order ? (
             <>
               <Row label="Subtotal" value={formatMoney(order.subtotal, auth?.currency)} />
-              <Row label="Tax" value={formatMoney(order.taxAmount, auth?.currency)} />
+              <Row label="CGST" value={formatMoney(order.cgstAmount || order.taxAmount / 2, auth?.currency)} />
+              <Row label="SGST" value={formatMoney(order.sgstAmount || order.taxAmount / 2, auth?.currency)} />
               <Row label="Service Charge" value={formatMoney(order.serviceCharge, auth?.currency)} />
               <div className="h-px bg-border" />
               <div className="flex items-baseline justify-between">

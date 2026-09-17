@@ -64,6 +64,12 @@ const orderSchema = new Schema(
 
     subtotal: { type: Number, required: true, min: 0 },
     taxAmount: { type: Number, required: true, min: 0 },
+    // GST split for Indian tax invoices — intra-state supply (the standard case for a single
+    // dine-in/takeaway café), so tax is CGST + SGST rather than IGST. Always an even split of
+    // taxAmount (orderCalculation.service.ts), stored explicitly rather than derived on every
+    // read so receipts/exports don't need to re-derive the split logic themselves.
+    cgstAmount: { type: Number, required: true, min: 0, default: 0 },
+    sgstAmount: { type: Number, required: true, min: 0, default: 0 },
     serviceCharge: { type: Number, required: true, min: 0 },
     totalAmount: { type: Number, required: true, min: 0 },
 
