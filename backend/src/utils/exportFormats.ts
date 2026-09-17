@@ -1,9 +1,12 @@
 import { Writable } from "node:stream";
-import { format as formatCsv } from "fast-csv";
+import { format as formatCsv, parseString as parseCsvString } from "fast-csv";
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
 
 export type ExportRow = Record<string, string | number | boolean | null | undefined>;
+/** A row read back from an uploaded file — cell values may be plain strings (CSV) or numbers
+ * (Excel numeric cells), so import callers coerce as needed rather than assuming a type. */
+export type ImportRow = Record<string, string | number | boolean | null | undefined>;
 
 function collect(stream: Writable): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -37,6 +40,51 @@ export async function toExcel(rows: ExportRow[], sheetName: string): Promise<Buf
 
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
+}
+
+/** Reads a CSV file (as uploaded, e.g. re-exported by toCsv and edited) back into rows keyed
+ * by its header row — the counterpart to toCsv for a bulk import flow. */
+export function parseCsv(buffer: Buffer): Promise<ImportRow[]> {
+  return new Promise((resolve, reject) => {
+    const rows: ImportRow[] = [];
+    parseCsvString(buffer.toString("utf-8"), { headers: true, trim: true, ignoreEmpty: true })
+      .on("data", (row: ImportRow) => rows.push(row))
+      .on("end", () => resolve(rows))
+      .on("error", reject);
+  });
+}
+
+/** Reads an .xlsx file's first sheet back into rows keyed by its header row — the counterpart
+ * to toExcel for a bulk import flow. */
+export async function parseExcel(buffer: Buffer): Promise<ImportRow[]> {
+  const workbook = new ExcelJS.Workbook();
+  // exceljs's own Buffer type (from its bundled Node types) structurally disagrees with the
+  // project's @types/node Buffer — same underlying runtime object, just a TS lib mismatch.
+  await workbook.xlsx.load(buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
+  const sheet = workbook.worksheets[0];
+  if (!sheet) return [];
+
+  const headers: string[] = [];
+  sheet.getRow(1).eachCell({ includeEmpty: false }, (cell, colNumber) => {
+    headers[colNumber - 1] = String(cell.value ?? "").trim();
+  });
+
+  const rows: ImportRow[] = [];
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return;
+    const parsed: ImportRow = {};
+    let hasValue = false;
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const header = headers[colNumber - 1];
+      if (!header) return;
+      const value = cell.value;
+      if (value !== null && value !== undefined && value !== "") hasValue = true;
+      parsed[header] = typeof value === "object" && value !== null ? String((value as { text?: string }).text ?? value) : (value as ImportRow[string]);
+    });
+    if (hasValue) rows.push(parsed);
+  });
+
+  return rows;
 }
 
 export interface PdfReportHeader {

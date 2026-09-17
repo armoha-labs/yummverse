@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowDown, ArrowUp, Pencil, Plus } from "lucide-react";
-import { api } from "@/lib/apiClient";
+import { ArrowDown, ArrowUp, Download, Pencil, Plus, Upload } from "lucide-react";
+import { api, apiFetch } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,7 +48,10 @@ type ItemForm = z.infer<typeof itemSchema>;
 export default function MenuManagementPage() {
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="font-display text-2xl font-extrabold">Menu Management</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl font-extrabold">Menu Management</h1>
+        <MenuImportExport />
+      </div>
       <Tabs defaultValue="categories">
         <TabsList>
           <TabsTrigger value="categories">Categories</TabsTrigger>
@@ -61,6 +64,113 @@ export default function MenuManagementPage() {
           <ItemsTab />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+interface MenuImportSummary {
+  categoriesCreated: number;
+  itemsCreated: number;
+  itemsUpdated: number;
+  errors: { row: number; message: string }[];
+}
+
+/** Export/import the whole menu (categories + items in one flattened sheet) as a single
+ * spreadsheet, so an admin can bulk-edit prices/GST/availability in Excel and re-import
+ * rather than clicking through each item individually. */
+function MenuImportExport() {
+  const queryClient = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [summary, setSummary] = useState<MenuImportSummary | null>(null);
+
+  async function exportMenu(format: "csv" | "excel") {
+    const blob = await apiFetch<Blob>(`/admin/menu-items/export?format=${format}`);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `menu.${format === "excel" ? "xlsx" : "csv"}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const importMenu = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return api.postForm<MenuImportSummary>("/admin/menu-items/import", formData);
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
+      setSummary(result);
+    },
+  });
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button size="sm" variant="outline" onClick={() => exportMenu("csv")}>
+        <Download size={14} /> Export CSV
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => exportMenu("excel")}>
+        <Download size={14} /> Export Excel
+      </Button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) importMenu.mutate(file);
+          e.target.value = "";
+        }}
+      />
+      <Button size="sm" variant="outline" disabled={importMenu.isPending} onClick={() => fileRef.current?.click()}>
+        <Upload size={14} /> {importMenu.isPending ? "Importing…" : "Import CSV/Excel"}
+      </Button>
+
+      <Dialog open={Boolean(summary)} onOpenChange={(open) => !open && setSummary(null)}>
+        {summary && (
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Import Complete</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 text-sm">
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="rounded-control border border-border p-3">
+                  <div className="font-display text-xl font-extrabold">{summary.categoriesCreated}</div>
+                  <div className="text-xs text-text-muted">Categories added</div>
+                </div>
+                <div className="rounded-control border border-border p-3">
+                  <div className="font-display text-xl font-extrabold">{summary.itemsCreated}</div>
+                  <div className="text-xs text-text-muted">Items added</div>
+                </div>
+                <div className="rounded-control border border-border p-3">
+                  <div className="font-display text-xl font-extrabold">{summary.itemsUpdated}</div>
+                  <div className="text-xs text-text-muted">Items updated</div>
+                </div>
+              </div>
+              {summary.errors.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                  <div className="text-xs font-semibold text-danger">
+                    {summary.errors.length} row{summary.errors.length === 1 ? "" : "s"} skipped:
+                  </div>
+                  <div className="max-h-40 overflow-y-auto rounded-control bg-danger-soft p-2.5 text-xs text-danger">
+                    {summary.errors.map((err, i) => (
+                      <div key={i}>
+                        Row {err.row}: {err.message}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setSummary(null)}>Done</Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }

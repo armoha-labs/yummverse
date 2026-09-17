@@ -19,3 +19,24 @@ export const imageUpload = multer({
     callback(null, true);
   },
 });
+
+const ALLOWED_SPREADSHEET_TYPES = new Set([
+  "text/csv",
+  "application/vnd.ms-excel", // some browsers/OSes report CSV as this
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+]);
+const MAX_SPREADSHEET_BYTES = 5 * 1024 * 1024; // 5MB — generous for a menu-sized CSV/XLSX
+
+/** Menu bulk import (§29A's category/item list) — CSV or .xlsx, uploaded once and parsed
+ * entirely in memory (no disk persistence needed, unlike a logo). */
+export const spreadsheetUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_SPREADSHEET_BYTES },
+  fileFilter: (_req, file, callback) => {
+    if (!ALLOWED_SPREADSHEET_TYPES.has(file.mimetype)) {
+      callback(ApiError.badRequest("UNSUPPORTED_FILE_TYPE", "Allowed types: CSV, XLSX."));
+      return;
+    }
+    callback(null, true);
+  },
+});

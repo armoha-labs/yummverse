@@ -43,3 +43,7 @@ export const listMenuItemsQuerySchema = z.object({
 export const branchIdParamSchema = z.object({
   branchId: z.string().min(1),
 });
+
+export const menuExportQuerySchema = z.object({
+  format: z.enum(["csv", "excel"]).default("csv"),
+});

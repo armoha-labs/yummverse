@@ -3,13 +3,16 @@ import * as menuItemController from "../controllers/menuItem.controller.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 import { attachTenantContext } from "../middleware/tenant.middleware.js";
 import { requireRole } from "../middleware/role.middleware.js";
+import { spreadsheetUpload } from "../middleware/upload.middleware.js";
 
 export const menuItemRouter = Router();
 
 menuItemRouter.use(requireAuth, attachTenantContext, requireRole("TENANT_ADMIN"));
 
-// Registered before "/:id" so "reorder" isn't swallowed as an id.
+// Registered before "/:id" so these static segments aren't swallowed as an id.
 menuItemRouter.put("/reorder", menuItemController.reorderMenuItems);
+menuItemRouter.get("/export", menuItemController.exportMenu);
+menuItemRouter.post("/import", spreadsheetUpload.single("file"), menuItemController.importMenu);
 
 menuItemRouter.get("/", menuItemController.listMenuItems);
 menuItemRouter.post("/", menuItemController.createMenuItem);
