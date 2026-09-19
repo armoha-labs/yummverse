@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -23,6 +23,7 @@ import { logout } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/apiClient";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
+import { PageLoading } from "@/components/PageLoading";
 
 // Relative to the current match (/:tenantSlug/admin) so the café slug in the URL is
 // preserved when navigating between sections instead of being dropped.
@@ -148,7 +149,9 @@ export default function AdminLayout() {
       </aside>
 
       <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-7">
-        <Outlet />
+        <Suspense fallback={<PageLoading />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );

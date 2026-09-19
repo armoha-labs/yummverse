@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Building2, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, logout } from "@/lib/auth";
 import { PlatformSidebarArt } from "@/components/PlatformSidebarArt";
+import { PageLoading } from "@/components/PageLoading";
 
 const NAV = [
   { to: "/platform/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -94,7 +95,9 @@ export default function PlatformLayout() {
       </aside>
 
       <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-7">
-        <Outlet />
+        <Suspense fallback={<PageLoading />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );

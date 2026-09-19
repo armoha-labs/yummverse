@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Navigate, Outlet, useParams } from "react-router-dom";
 import { useCustomerAuth } from "@/lib/customerAuth";
+import { PageLoading } from "@/components/PageLoading";
 
 function applyThemeVars(primaryColor?: string, secondaryColor?: string): () => void {
   const root = document.documentElement;
@@ -27,7 +28,9 @@ export default function CustomerLayout() {
 
   return (
     <div className="mx-auto min-h-screen max-w-[480px] bg-bg font-body text-text">
-      <Outlet />
+      <Suspense fallback={<PageLoading />}>
+        <Outlet />
+      </Suspense>
     </div>
   );
 }

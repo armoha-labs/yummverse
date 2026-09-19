@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Armchair, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,6 +6,7 @@ import { useAuth, logout } from "@/lib/auth";
 import { useStaffBranding } from "@/lib/useTenantBranding";
 import { api } from "@/lib/apiClient";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
+import { PageLoading } from "@/components/PageLoading";
 
 export default function WaiterLayout() {
   const auth = useAuth();
@@ -42,7 +43,9 @@ export default function WaiterLayout() {
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 py-4 pb-24">
-        <Outlet />
+        <Suspense fallback={<PageLoading />}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <nav className="fixed bottom-0 left-1/2 flex w-full max-w-md -translate-x-1/2 border-t border-border bg-surface px-2 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
