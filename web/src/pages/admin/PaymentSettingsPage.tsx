@@ -92,7 +92,16 @@ export default function PaymentSettingsPage() {
   });
 
   const testConnection = useMutation({
-    mutationFn: () => api.post<{ ok: boolean; message: string }>(`/tenant/payment-settings/test${branchId ? `?branchId=${branchId}` : ""}`),
+    mutationFn: () => {
+      const data = watch();
+      // Test whatever's currently in the form (not yet saved) — falls back on the backend to
+      // the already-saved Key Secret when this is blank, same "leave blank to keep"
+      // convention Save uses, so re-testing after just changing the currency still works.
+      return api.post<{ ok: boolean; message: string }>(
+        `/tenant/payment-settings/test${branchId ? `?branchId=${branchId}` : ""}`,
+        { provider: data.provider, keyId: data.keyId || undefined, keySecret: data.keySecret || undefined },
+      );
+    },
     onSuccess: (result) => setTestResult(result),
     onError: (err) => setTestResult({ ok: false, message: err instanceof ApiError ? err.message : "Test failed." }),
   });

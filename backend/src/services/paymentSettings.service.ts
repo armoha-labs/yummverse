@@ -101,19 +101,33 @@ export const paymentSettingsService = {
     });
   },
 
-  async testConnection(tenantId: string, branchId: string | undefined): Promise<TestConnectionResult> {
+  async testConnection(
+    tenantId: string,
+    branchId: string | undefined,
+    override?: { provider?: PaymentProviderName; keyId?: string; keySecret?: string },
+  ): Promise<TestConnectionResult> {
     if (branchId) await assertBranchBelongsToTenant(tenantId, branchId);
 
     const settings = await tenantPaymentSettingsRepository.findResolved(tenantId, branchId);
-    if (!settings || !settings.credentials?.keyId || !settings.credentials.keySecretEncrypted) {
-      return { ok: false, message: "No payment credentials are configured yet." };
+
+    // Tests whatever the admin currently has in the form, not only what's already saved —
+    // otherwise "Test Connection" only ever validates a *previous* save, which is exactly
+    // backwards (it should be how you check credentials are right *before* saving them).
+    // Falls back to the saved value per-field, the same "leave blank to keep" convention the
+    // Save action itself uses, so re-testing after changing just the currency (say) still
+    // works without retyping a secret that hasn't changed.
+    const keyId = override?.keyId || settings?.credentials?.keyId;
+    const keySecret =
+      override?.keySecret ||
+      (settings?.credentials?.keySecretEncrypted ? decrypt(settings.credentials.keySecretEncrypted) : undefined);
+    const provider = override?.provider ?? (settings?.provider as PaymentProviderName | undefined) ?? "RAZORPAY";
+
+    if (!keyId || !keySecret) {
+      return { ok: false, message: "Enter a Key ID and Key Secret to test the connection." };
     }
 
-    const provider = PaymentProviderFactory.getProvider(settings.provider as PaymentProviderName);
-    return provider.testConnection({
-      keyId: settings.credentials.keyId,
-      keySecret: decrypt(settings.credentials.keySecretEncrypted),
-    });
+    const providerImpl = PaymentProviderFactory.getProvider(provider);
+    return providerImpl.testConnection({ keyId, keySecret });
   },
 
   /** Pre-fills a form from another branch's settings — never copies the secret itself (§16). */

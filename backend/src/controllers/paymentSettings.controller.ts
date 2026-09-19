@@ -6,6 +6,7 @@ import { ApiError } from "../utils/ApiError.js";
 import {
   branchIdQuerySchema,
   upsertPaymentSettingsSchema,
+  testPaymentConnectionSchema,
   copyPaymentSettingsSchema,
 } from "../validators/paymentSettings.validators.js";
 
@@ -49,7 +50,8 @@ export const deletePaymentSettings = asyncHandler(async (req: Request, res: Resp
 export const testPaymentConnection = asyncHandler(async (req: Request, res: Response) => {
   const { tenantId } = requireTenantContext(req);
   const { branchId } = branchIdQuerySchema.parse(req.query);
-  const result = await paymentSettingsService.testConnection(tenantId, branchId);
+  const override = testPaymentConnectionSchema.parse(req.body ?? {});
+  const result = await paymentSettingsService.testConnection(tenantId, branchId, override);
   sendSuccess(res, result);
 });
 

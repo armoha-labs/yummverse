@@ -15,6 +15,12 @@ export const upsertPaymentSettingsSchema = z.object({
   webhookSecret: z.string().optional(),
 });
 
+export const testPaymentConnectionSchema = z.object({
+  provider: z.enum(PAYMENT_PROVIDERS).optional(),
+  keyId: z.string().optional(),
+  keySecret: z.string().optional(),
+});
+
 export const copyPaymentSettingsSchema = z.object({
   fromBranchId: z.string().optional(),
   toBranchId: z.string().min(1),

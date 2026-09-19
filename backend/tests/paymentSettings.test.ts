@@ -157,6 +157,62 @@ describe("tenant payment settings", () => {
     expect(typeof result.body.data.message).toBe("string");
   }, 20000);
 
+  it("tests credentials typed into the form directly, without requiring a save first", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("pay-f");
+
+    // Deliberately never saved — this is the bug: "Test Connection" used to only ever check
+    // what was already persisted, so a café admin testing brand-new credentials before
+    // saving them always got "No payment credentials are configured yet." regardless of
+    // what they'd actually typed into the form.
+    const result = await request(app)
+      .post("/api/v1/tenant/payment-settings/test")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ provider: "RAZORPAY", keyId: "rzp_test_unsaved", keySecret: "unsaved_secret" });
+
+    expect(result.status).toBe(200);
+    expect(result.body.data.message).not.toBe("No payment credentials are configured yet.");
+    // A real (rejected, since these are fake) gateway attempt, not the old placeholder.
+    expect(result.body.data.ok).toBe(false);
+
+    const saved = await request(app)
+      .get("/api/v1/tenant/payment-settings")
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(saved.body.data).toBeNull(); // confirms nothing was persisted by testing alone
+  }, 20000);
+
+  it("test-connection asks for credentials when neither typed nor saved", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("pay-g");
+
+    const result = await request(app)
+      .post("/api/v1/tenant/payment-settings/test")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({});
+
+    expect(result.status).toBe(200);
+    expect(result.body.data).toEqual({ ok: false, message: "Enter a Key ID and Key Secret to test the connection." });
+  });
+
+  it("falls back to the already-saved Key Secret when testing a new Key ID with the secret left blank", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("pay-h");
+
+    await request(app)
+      .put("/api/v1/tenant/payment-settings")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ provider: "RAZORPAY", keyId: "rzp_test_original", keySecret: "original_secret", enabled: true });
+
+    // New Key ID, no Key Secret in the request — should reuse the saved (decrypted) secret
+    // rather than treating the test as "no credentials", same "leave blank to keep"
+    // convention Save itself uses.
+    const result = await request(app)
+      .post("/api/v1/tenant/payment-settings/test")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ provider: "RAZORPAY", keyId: "rzp_test_changed" });
+
+    expect(result.status).toBe(200);
+    expect(result.body.data.message).not.toBe("Enter a Key ID and Key Secret to test the connection.");
+    expect(result.body.data.ok).toBe(false); // fake credentials, genuinely rejected by the gateway
+  }, 20000);
+
   it("requires authentication", async () => {
     const { app } = await createActivatedTenantAdmin("pay-e");
     const res = await request(app).get("/api/v1/tenant/payment-settings");
