@@ -10,5 +10,6 @@ export const posRouter = Router();
 posRouter.use(requireAuth, attachTenantContext, requireRole("WAITER", "TENANT_ADMIN"));
 
 posRouter.get("/menu", posController.getPosMenu);
+posRouter.get("/settings", posController.getPosSettings);
 posRouter.post("/orders", posController.createPosOrder);
 posRouter.post("/orders/:id/pay", posController.payPosOrder);

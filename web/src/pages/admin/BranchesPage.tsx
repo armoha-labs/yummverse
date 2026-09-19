@@ -19,11 +19,11 @@ interface Branch {
   isDefault: boolean;
   status: "ACTIVE" | "INACTIVE";
   address?: { city?: string };
-  settings?: { payment?: { allowPayLater?: boolean } };
+  settings?: { payment?: { allowPayLater?: boolean; posCardEnabled?: boolean } };
 }
 
 interface TenantDefaults {
-  payment: { allowPayLater: boolean };
+  payment: { allowPayLater: boolean; posCardEnabled: boolean };
 }
 
 const schema = z.object({
@@ -151,18 +151,18 @@ function BranchSettingsDialog({ branch, onClose }: { branch: Branch | null; onCl
   });
 
   const save = useMutation({
-    mutationFn: (allowPayLater: boolean) =>
-      api.put(`/admin/branches/${branch!._id}`, { settings: { payment: { allowPayLater } } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["branches"] });
-      onClose();
-    },
+    mutationFn: (payment: Partial<{ allowPayLater: boolean; posCardEnabled: boolean }>) =>
+      api.put(`/admin/branches/${branch!._id}`, { settings: { payment } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["branches"] }),
   });
 
   if (!branch) return null;
 
-  const tenantDefault = tenantDefaults.data?.payment.allowPayLater ?? false;
-  const effective = branch.settings?.payment?.allowPayLater ?? tenantDefault;
+  const tenantDefaults_ = tenantDefaults.data?.payment;
+  const allowPayLaterDefault = tenantDefaults_?.allowPayLater ?? false;
+  const allowPayLaterEffective = branch.settings?.payment?.allowPayLater ?? allowPayLaterDefault;
+  const posCardDefault = tenantDefaults_?.posCardEnabled ?? false;
+  const posCardEffective = branch.settings?.payment?.posCardEnabled ?? posCardDefault;
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -172,22 +172,51 @@ function BranchSettingsDialog({ branch, onClose }: { branch: Branch | null; onCl
           <DialogDescription>Overrides the tenant-wide default for this branch only.</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <Label>Accept Payment Later (Pay at Counter)</Label>
-              <span className="text-xs text-text-muted">
-                Customers can send an order to the kitchen before paying; staff collect payment afterward.
-              </span>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <Label>Accept Payment Later (Pay at Counter)</Label>
+                <span className="text-xs text-text-muted">
+                  Customers can send an order to the kitchen before paying; staff collect payment afterward.
+                </span>
+              </div>
+              <Switch
+                checked={allowPayLaterEffective}
+                disabled={save.isPending}
+                onCheckedChange={(v) => save.mutate({ allowPayLater: v })}
+              />
             </div>
-            <Switch checked={effective} disabled={save.isPending} onCheckedChange={(v) => save.mutate(v)} />
+            {branch.settings?.payment?.allowPayLater === undefined && (
+              <div className="text-xs text-text-muted">
+                Currently inheriting the tenant default ({allowPayLaterDefault ? "on" : "off"}). Toggling sets an
+                explicit override for this branch.
+              </div>
+            )}
           </div>
-          {branch.settings?.payment?.allowPayLater === undefined && (
-            <div className="text-xs text-text-muted">
-              Currently inheriting the tenant default ({tenantDefault ? "on" : "off"}). Toggling sets an explicit
-              override for this branch.
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <Label>Card Payment via POS Terminal</Label>
+                <span className="text-xs text-text-muted">
+                  Only turn this on once this branch actually has the card-terminal hardware/SDK installed —
+                  until then it's a manual staff-confirmed entry, not a real card-present transaction.
+                </span>
+              </div>
+              <Switch
+                checked={posCardEffective}
+                disabled={save.isPending}
+                onCheckedChange={(v) => save.mutate({ posCardEnabled: v })}
+              />
             </div>
-          )}
+            {branch.settings?.payment?.posCardEnabled === undefined && (
+              <div className="text-xs text-text-muted">
+                Currently inheriting the tenant default ({posCardDefault ? "on" : "off"}). Toggling sets an explicit
+                override for this branch.
+              </div>
+            )}
+          </div>
         </div>
 
         <DialogFooter>

@@ -12,6 +12,7 @@ import { useTenantBranding } from "@/lib/useTenantBranding";
 
 interface OrderRow {
   _id: string;
+  branchId: string;
   orderNumber: number;
   channel: "QR" | "POS";
   items: { name: string; quantity: number }[];
@@ -204,6 +205,17 @@ function CollectPaymentDialog({ order, onClose }: { order: OrderRow | null; onCl
   const [method, setMethod] = useState<"CASH" | "POS_CARD">("CASH");
   const [error, setError] = useState<string | null>(null);
 
+  const posSettings = useQuery({
+    queryKey: ["pos-settings", order?.branchId],
+    queryFn: () => api.get<{ posCardEnabled: boolean }>(`/pos/settings?branchId=${order!.branchId}`),
+    enabled: Boolean(order),
+  });
+  // Card (POS terminal) only shows up once this order's branch actually has it enabled
+  // (Settings → Operations, or a per-branch override) — see PosOrderPage.tsx for why.
+  const paymentMethods = (["CASH", "POS_CARD"] as const).filter(
+    (m) => m !== "POS_CARD" || posSettings.data?.posCardEnabled,
+  );
+
   const collect = useMutation({
     mutationFn: () => api.post(`/pos/orders/${order!._id}/pay`, { method }),
     onSuccess: () => {
@@ -232,7 +244,7 @@ function CollectPaymentDialog({ order, onClose }: { order: OrderRow | null; onCl
         </DialogHeader>
 
         <div className="flex gap-2">
-          {(["CASH", "POS_CARD"] as const).map((m) => (
+          {paymentMethods.map((m) => (
             <button
               key={m}
               type="button"

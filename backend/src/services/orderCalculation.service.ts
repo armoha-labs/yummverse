@@ -117,6 +117,17 @@ export async function resolveAllowPayLater(tenantId: string, branchId: string): 
   return branch?.settings?.payment?.allowPayLater ?? tenantSettings.payment?.allowPayLater ?? false;
 }
 
+/** Same branch-overrides-tenant inheritance rule as above. Off by default everywhere — the
+ * "Card (POS terminal)" collection method has no real card-present hardware/SDK wired up yet
+ * (§23A.3), so a tenant switches this on only once that's actually in place. */
+export async function resolvePosCardEnabled(tenantId: string, branchId: string): Promise<boolean> {
+  const [branch, tenantSettings] = await Promise.all([
+    branchRepository.findById(tenantId, branchId),
+    tenantSettingsService.getOrCreate(tenantId),
+  ]);
+  return branch?.settings?.payment?.posCardEnabled ?? tenantSettings.payment?.posCardEnabled ?? false;
+}
+
 function round2(value: number): number {
   return Math.round(value * 100) / 100;
 }

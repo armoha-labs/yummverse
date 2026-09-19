@@ -79,6 +79,17 @@ export default function PosOrderPage() {
     queryFn: () => api.get<Table[]>(`/admin/tables?branchId=${effectiveBranchId}`),
     enabled: Boolean(effectiveBranchId),
   });
+  const posSettings = useQuery({
+    queryKey: ["pos-settings", effectiveBranchId],
+    queryFn: () => api.get<{ posCardEnabled: boolean }>(`/pos/settings?branchId=${effectiveBranchId}`),
+    enabled: Boolean(effectiveBranchId),
+  });
+  // Card (POS terminal) only shows up once a café has actually enabled it (Settings →
+  // Operations) — until then it's not a real card-present integration, just a staff-trusted
+  // bookkeeping entry, so there's no point offering it as a collection method yet.
+  const paymentMethods = (["CASH", "POS_CARD"] as const).filter(
+    (m) => m !== "POS_CARD" || posSettings.data?.posCardEnabled,
+  );
 
   const searching = search.trim().length > 0;
   const filtered = (menu.data ?? []).filter((item) => {
@@ -149,7 +160,7 @@ export default function PosOrderPage() {
           <div className="font-display text-3xl font-extrabold">{currency(createdOrder.totalAmount)}</div>
 
           <div className="mt-2 flex gap-2">
-            {(["CASH", "POS_CARD"] as const).map((m) => (
+            {paymentMethods.map((m) => (
               <button
                 key={m}
                 type="button"

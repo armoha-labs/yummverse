@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { posService } from "../services/pos.service.js";
 import { publicMenuService } from "../services/publicMenu.service.js";
 import { resolveActingBranchId } from "../services/resolveActingBranch.js";
+import { resolvePosCardEnabled } from "../services/orderCalculation.service.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -49,4 +50,14 @@ export const getPosMenu = asyncHandler(async (req: Request, res: Response) => {
   const branchId = await resolveBranch(req, queryBranchId);
   const items = await publicMenuService.getMenu(req.tenantId, branchId);
   sendSuccess(res, items);
+});
+
+/** Lets the POS/collect-payment UI show or hide the "Card (POS terminal)" option before the
+ * staff member even picks it, rather than only finding out it's disabled after trying. */
+export const getPosSettings = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.tenantId) throw ApiError.forbidden("TENANT_CONTEXT_REQUIRED");
+  const { branchId: queryBranchId } = branchIdQuerySchema.parse(req.query);
+  const branchId = await resolveBranch(req, queryBranchId);
+  const posCardEnabled = await resolvePosCardEnabled(req.tenantId, branchId);
+  sendSuccess(res, { posCardEnabled });
 });

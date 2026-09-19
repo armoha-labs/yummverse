@@ -42,8 +42,14 @@ const branchSchema = new Schema(
           _id: false,
         },
         // Absent means "inherit the tenant default", same rule as tax/serviceCharge above.
+        // Each field is independently optional (not required together) — a branch can
+        // override just one of allowPayLater/posCardEnabled without having to also restate
+        // the other, which would otherwise silently pin it away from the tenant default.
         payment: {
-          type: { allowPayLater: { type: Boolean, required: true } },
+          type: {
+            allowPayLater: { type: Boolean, required: false },
+            posCardEnabled: { type: Boolean, required: false },
+          },
           required: false,
           _id: false,
         },

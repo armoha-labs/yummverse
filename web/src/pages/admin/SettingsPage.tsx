@@ -17,7 +17,7 @@ interface Settings {
   tax: { enabled: boolean; percentage: number };
   serviceCharge: { enabled: boolean; percentage: number };
   ordering: { collectCustomerPhone: boolean; allowMultipleOrdersPerTable: boolean };
-  payment: { allowPayLater: boolean };
+  payment: { allowPayLater: boolean; posCardEnabled: boolean };
 }
 
 interface Branding {
@@ -149,8 +149,16 @@ function OperationsTab() {
         checked={s.payment.allowPayLater}
         onCheckedChange={(allowPayLater) => save.mutate({ payment: { ...s.payment, allowPayLater } })}
       />
+      <ToggleRow
+        label="Card Payment via POS Terminal"
+        checked={s.payment.posCardEnabled}
+        onCheckedChange={(posCardEnabled) => save.mutate({ payment: { ...s.payment, posCardEnabled } })}
+      />
       <div className="-mt-2 pl-0 text-xs text-text-muted">
-        Default for new branches. Each branch can override this under Branches.
+        Off by default — there's no card-terminal SDK wired up yet, so "Card (POS terminal)" at
+        checkout is only a manual staff-confirmed entry, not a real card-present transaction.
+        Turn this on once your café actually has that hardware/SDK installed. Both settings are
+        defaults for new branches; each branch can override them under Branches.
       </div>
     </div>
   );

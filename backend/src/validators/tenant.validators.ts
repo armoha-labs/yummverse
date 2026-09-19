@@ -40,7 +40,7 @@ export const updateSettingsSchema = z.object({
     .object({ soundEnabled: z.boolean(), browserPushEnabled: z.boolean() })
     .partial()
     .optional(),
-  payment: z.object({ allowPayLater: z.boolean() }).partial().optional(),
+  payment: z.object({ allowPayLater: z.boolean(), posCardEnabled: z.boolean() }).partial().optional(),
 });
 
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a hex color, e.g. #4B2E2B.");

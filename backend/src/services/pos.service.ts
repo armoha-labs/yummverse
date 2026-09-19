@@ -2,7 +2,12 @@ import { orderRepository } from "../repositories/order.repository.js";
 import { paymentRepository } from "../repositories/payment.repository.js";
 import { tableRepository } from "../repositories/table.repository.js";
 import { nextSequence } from "../models/Counter.js";
-import { resolveEffectiveRates, calculateOrderTotals, resolveOrderLines } from "./orderCalculation.service.js";
+import {
+  resolveEffectiveRates,
+  calculateOrderTotals,
+  resolveOrderLines,
+  resolvePosCardEnabled,
+} from "./orderCalculation.service.js";
 import { paymentService } from "./payment.service.js";
 import { realtimeEvents } from "../sockets/realtimeEvents.js";
 import { notificationService } from "../notifications/NotificationService.js";
@@ -75,9 +80,10 @@ export const posService = {
    * POS_CARD trusts the staff-operated terminal's confirmation for now — wiring a real
    * card-present verification API (Razorpay POS / Pine Labs) is explicitly a hardware/SDK
    * integration (§23A.5) this environment can't exercise, so it is *not* pretend-verified
-   * here. PAYMENT_LINK reuses the same gateway-order flow as online QR payment and is
-   * confirmed the same way: via the payment webhook (§37), since the customer pays on
-   * their own device, not the POS session.
+   * here, and is gated behind its own tenant/branch setting (default off) so it's only
+   * offered once a café actually has that terminal/SDK in place. PAYMENT_LINK reuses the
+   * same gateway-order flow as online QR payment and is confirmed the same way: via the
+   * payment webhook (§37), since the customer pays on their own device, not the POS session.
    */
   async pay(actor: Omit<PosActor, "branchId"> & { branchId?: string }, orderId: string, method: PosPaymentMethod) {
     const order = await orderRepository.findById(actor.tenantId, orderId);
@@ -94,6 +100,13 @@ export const posService = {
 
     if (method === "PAYMENT_LINK") {
       return paymentService.createPayment({ tenantId: actor.tenantId, branchId }, orderId);
+    }
+
+    if (method === "POS_CARD" && !(await resolvePosCardEnabled(actor.tenantId, branchId))) {
+      throw ApiError.badRequest(
+        "POS_CARD_DISABLED",
+        "Card payment via POS terminal isn't enabled for this branch yet.",
+      );
     }
 
     const payment = await paymentRepository.create({

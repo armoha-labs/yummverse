@@ -67,7 +67,11 @@ export const branchService = {
       };
     }
     if (updates.settings?.payment) {
-      const current = branch.settings?.payment ?? { allowPayLater: false };
+      // {} not { allowPayLater: false, ... } — payment now has more than one independent
+      // field (§23A.5's posCardEnabled), and a fallback that pins unrelated fields to a
+      // concrete value would turn "override just posCardEnabled" into an unintended,
+      // silent override of allowPayLater too (and vice versa) the first time either is set.
+      const current = branch.settings?.payment ?? {};
       branch.settings = {
         ...branch.settings,
         payment: { ...current, ...updates.settings.payment },

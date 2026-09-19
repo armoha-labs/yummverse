@@ -31,7 +31,7 @@ export const updateBranchSchema = z.object({
         .object({ enabled: z.boolean(), percentage: z.number().min(0).max(100) })
         .partial()
         .optional(),
-      payment: z.object({ allowPayLater: z.boolean() }).partial().optional(),
+      payment: z.object({ allowPayLater: z.boolean(), posCardEnabled: z.boolean() }).partial().optional(),
     })
     .optional(),
 });
