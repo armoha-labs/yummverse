@@ -35,7 +35,19 @@ export class RazorpayProvider implements PaymentProvider {
       .digest("hex");
 
     const verified = timingSafeEqualHex(expected, input.signature);
-    return { verified };
+    if (!verified) return { verified };
+
+    // Checkout's client-side handler callback only gives an id/order_id/signature, not how
+    // the customer actually paid — fetch the payment record itself (now that its signature
+    // is confirmed genuine) for the "card"/"upi"/"netbanking"/"wallet" method, used by the
+    // Revenue report's by-payment-method breakdown. Best-effort: a fetch failure shouldn't
+    // fail an already-verified payment, it just leaves the method unset for this one.
+    try {
+      const payment = await client(input.credentials).payments.fetch(input.providerPaymentId);
+      return { verified, method: payment.method };
+    } catch {
+      return { verified };
+    }
   }
 
   async processWebhook(input: WebhookInput): Promise<WebhookResult> {
@@ -55,7 +67,7 @@ export class RazorpayProvider implements PaymentProvider {
     const payload = JSON.parse(input.rawBody) as {
       event?: string;
       payload?: {
-        payment?: { entity?: { id?: string; order_id?: string } };
+        payment?: { entity?: { id?: string; order_id?: string; method?: string } };
         order?: { entity?: { id?: string } };
       };
     };
@@ -66,6 +78,7 @@ export class RazorpayProvider implements PaymentProvider {
       providerOrderId:
         payload.payload?.payment?.entity?.order_id ?? payload.payload?.order?.entity?.id,
       providerPaymentId: payload.payload?.payment?.entity?.id,
+      method: payload.payload?.payment?.entity?.method,
     };
   }
 

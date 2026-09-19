@@ -239,10 +239,11 @@ export const paymentService = {
     if (result.eventType === "payment.captured" && result.providerPaymentId) {
       payment.status = "PAID";
       payment.providerPaymentId = result.providerPaymentId;
+      if (result.method) payment.method = result.method;
       await payment.save();
       const order = await Order.findOneAndUpdate(
         { _id: payment.orderId },
-        { paymentStatus: "PAID", orderStatus: "NEW" },
+        { paymentStatus: "PAID", orderStatus: "NEW", ...(result.method ? { paymentMethod: result.method } : {}) },
         { new: true },
       );
       if (order) {

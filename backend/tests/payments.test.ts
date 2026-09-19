@@ -20,6 +20,7 @@ vi.mock("razorpay", () => {
     };
     payments = {
       refund: async (paymentId: string) => ({ id: `rfnd_${paymentId}`, status: "processed" }),
+      fetch: async (paymentId: string) => ({ id: paymentId, method: "upi" }),
     };
   }
   return { default: MockRazorpay };
@@ -156,6 +157,9 @@ describe("payment creation & verification", () => {
       .set("Authorization", `Bearer ${sessionToken}`);
     expect(refetched.body.data.orderStatus).toBe("NEW");
     expect(refetched.body.data.paymentStatus).toBe("PAID");
+    // The actual method the customer paid with — fetched from the gateway once the
+    // signature is confirmed genuine — not left blank/"UNKNOWN" in the Revenue report.
+    expect(refetched.body.data.paymentMethod).toBe("upi");
   });
 
   it("rejects a payment with an invalid signature and marks the order PAYMENT_FAILED", async () => {
@@ -194,7 +198,7 @@ describe("payment webhooks (§37, §38)", () => {
       event: "payment.captured",
       payload: {
         payment: {
-          entity: { id: "pay_webhook_1", order_id: created.body.data.providerOrderId },
+          entity: { id: "pay_webhook_1", order_id: created.body.data.providerOrderId, method: "card" },
         },
       },
     });
@@ -213,6 +217,9 @@ describe("payment webhooks (§37, §38)", () => {
       .set("Authorization", `Bearer ${sessionToken}`);
     expect(refetched.body.data.orderStatus).toBe("NEW");
     expect(refetched.body.data.paymentStatus).toBe("PAID");
+    // The webhook payload's own payment.entity.method — not fetched from the gateway again,
+    // it's already in the (signature-verified) payload.
+    expect(refetched.body.data.paymentMethod).toBe("card");
 
     // redelivery of the same event must not error or double-process
     const redelivered = await request(app)

@@ -42,6 +42,9 @@ export interface WebhookResult {
   providerOrderId?: string;
   providerPaymentId?: string;
   providerEventId?: string;
+  /** e.g. "card", "upi", "netbanking", "wallet" — how the customer actually paid, for the
+   * Revenue report's payment-method breakdown. */
+  method?: string;
 }
 
 export interface RefundInput {
