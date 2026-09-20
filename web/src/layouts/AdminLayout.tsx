@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useTenantBranding } from "@/lib/useTenantBranding";
 import { useTenantSettings } from "@/lib/useTenantSettings";
+import { useIntegrationsAvailable } from "@/lib/useIntegrationsAvailable";
 import { logout } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/apiClient";
@@ -50,7 +51,10 @@ export default function AdminLayout() {
   const settings = useTenantSettings();
   const [navOpen, setNavOpen] = useState(false);
   const kitchenEnabled = settings.data?.ordering.kitchenEnabled ?? true;
-  const nav = NAV.filter((item) => item.to !== "kitchen" || kitchenEnabled);
+  const integrationsEnabled = useIntegrationsAvailable();
+  const nav = NAV.filter((item) => item.to !== "kitchen" || kitchenEnabled).filter(
+    (item) => item.to !== "integrations" || integrationsEnabled,
+  );
 
   useEffect(() => {
     void registerForPushNotifications(api.post);
