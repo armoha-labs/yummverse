@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { api, ApiError } from "@/lib/apiClient";
+import { api, apiFetch, ApiError } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Branch {
   _id: string;
@@ -37,6 +40,26 @@ interface FormValues {
 }
 
 export default function PaymentSettingsPage() {
+  return (
+    <div className="flex flex-col gap-5">
+      <h1 className="font-display text-2xl font-extrabold">Payments</h1>
+      <Tabs defaultValue="settings">
+        <TabsList>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="report">Report</TabsTrigger>
+        </TabsList>
+        <TabsContent value="settings" className="mt-5">
+          <SettingsTab />
+        </TabsContent>
+        <TabsContent value="report" className="mt-5">
+          <PaymentsReportTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function SettingsTab() {
   const queryClient = useQueryClient();
   const [branchId, setBranchId] = useState<string>("");
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -108,8 +131,6 @@ export default function PaymentSettingsPage() {
 
   return (
     <div className="flex max-w-xl flex-col gap-5">
-      <h1 className="font-display text-2xl font-extrabold">Payment Settings</h1>
-
       {isMultiBranch && (
         <div className="flex flex-wrap items-center gap-3">
           <Label>Configuring for</Label>
@@ -200,6 +221,215 @@ export default function PaymentSettingsPage() {
           </Button>
         </div>
       </form>
+    </div>
+  );
+}
+
+interface PaymentTransaction {
+  _id: string;
+  orderId: string;
+  amount: number;
+  refundedAmount?: number;
+  currency: string;
+  status: "CREATED" | "PENDING" | "PAID" | "FAILED" | "REFUND_PENDING" | "REFUNDED";
+  provider?: string;
+  providerPaymentId?: string;
+  method?: string;
+  createdAt: string;
+}
+
+interface PaymentsReport {
+  transactions: PaymentTransaction[];
+  refundTotal: number;
+  refundCount: number;
+}
+
+function currency(n: number): string {
+  return `₹${n.toLocaleString("en-IN")}`;
+}
+
+const STATUS_VARIANT: Record<PaymentTransaction["status"], "success" | "danger" | "secondary" | "outline"> = {
+  PAID: "success",
+  REFUNDED: "outline",
+  REFUND_PENDING: "secondary",
+  FAILED: "danger",
+  CREATED: "secondary",
+  PENDING: "secondary",
+};
+
+function PaymentsReportTab() {
+  const { data } = useQuery({ queryKey: ["report-payments"], queryFn: () => api.get<PaymentsReport>("/tenant/reports/payments") });
+  const [refunding, setRefunding] = useState<PaymentTransaction | null>(null);
+
+  async function exportReport(format: "csv" | "excel" | "pdf") {
+    const blob = await apiFetch<Blob>("/tenant/reports/export", {
+      method: "POST",
+      body: JSON.stringify({ reportType: "payments", format }),
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `payments.${format === "excel" ? "xlsx" : format}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  if (!data) return null;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+          <Stat label="Total Refunded" value={currency(data.refundTotal)} />
+          <Stat label="Refunds Issued" value={data.refundCount} />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => exportReport("csv")}>
+            Export CSV
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => exportReport("excel")}>
+            Export Excel
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => exportReport("pdf")}>
+            Export PDF
+          </Button>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
+        <div className="overflow-x-auto">
+          <div className="min-w-[700px]">
+            <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 border-b border-border px-5 py-3 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+              <div>Transaction ID</div>
+              <div>Amount</div>
+              <div>Refunded</div>
+              <div>Status</div>
+              <div />
+            </div>
+            {data.transactions.map((t) => {
+              const refunded = t.refundedAmount ?? 0;
+              const remaining = Math.round((t.amount - refunded) * 100) / 100;
+              const canRefund = t.status === "PAID" && remaining > 0;
+              return (
+                <div key={t._id} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] items-center gap-3 border-t border-border px-5 py-3 text-sm">
+                  <div className="truncate font-mono text-xs text-text-muted" title={t._id}>
+                    {t._id}
+                  </div>
+                  <div className="font-semibold">{currency(t.amount)}</div>
+                  <div className="text-text-muted">{refunded > 0 ? currency(refunded) : "—"}</div>
+                  <div>
+                    <Badge variant={STATUS_VARIANT[t.status]}>{t.status.replace("_", " ")}</Badge>
+                  </div>
+                  <div>
+                    {canRefund && (
+                      <Button size="sm" variant="outline" onClick={() => setRefunding(t)}>
+                        Refund
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {data.transactions.length === 0 && (
+              <div className="px-5 py-10 text-center text-sm text-text-muted">No transactions in this period.</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <RefundDialog transaction={refunding} onClose={() => setRefunding(null)} />
+    </div>
+  );
+}
+
+function RefundDialog({ transaction, onClose }: { transaction: PaymentTransaction | null; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const remaining = transaction ? Math.round((transaction.amount - (transaction.refundedAmount ?? 0)) * 100) / 100 : 0;
+  const [amount, setAmount] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const refund = useMutation({
+    mutationFn: (payload: { amount?: number }) => api.post(`/payments/${transaction!._id}/refund`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["report-payments"] });
+      handleClose();
+    },
+    onError: (err) => setError(err instanceof ApiError ? err.message : "Couldn't process the refund."),
+  });
+
+  function handleClose() {
+    setAmount("");
+    setError(null);
+    onClose();
+  }
+
+  function submit() {
+    setError(null);
+    if (amount.trim() === "") {
+      refund.mutate({}); // full remaining balance
+      return;
+    }
+    const parsed = Number(amount);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setError("Enter a valid refund amount.");
+      return;
+    }
+    if (parsed > remaining) {
+      setError(`Cannot exceed the outstanding balance of ${currency(remaining)}.`);
+      return;
+    }
+    refund.mutate({ amount: parsed });
+  }
+
+  return (
+    <Dialog open={Boolean(transaction)} onOpenChange={(open) => !open && handleClose()}>
+      {transaction && (
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Refund Transaction</DialogTitle>
+            <DialogDescription className="font-mono">{transaction._id}</DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-text-muted">Outstanding balance</span>
+              <span className="font-semibold">{currency(remaining)}</span>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11.5px] font-semibold text-text-muted">Refund amount</label>
+              <Input
+                type="number"
+                min={0}
+                max={remaining}
+                step="0.01"
+                placeholder={`Full amount (${currency(remaining)})`}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+              <div className="text-xs text-text-muted">Leave blank to refund the full outstanding balance.</div>
+            </div>
+            {error && <div className="text-sm text-danger">{error}</div>}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button variant="destructive" disabled={refund.isPending} onClick={submit}>
+              {refund.isPending ? "Refunding…" : "Confirm Refund"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      )}
+    </Dialog>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-card border border-border bg-surface p-[18px] shadow-sm2">
+      <div className="text-[12.5px] font-semibold text-text-muted">{label}</div>
+      <div className="mt-2 font-display text-2xl font-extrabold">{value}</div>
     </div>
   );
 }
