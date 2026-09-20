@@ -10,6 +10,7 @@ import { Receipt } from "@/components/Receipt";
 import { printReceipt as printReceiptPage } from "@/lib/printReceipt";
 import { useTenantBranding } from "@/lib/useTenantBranding";
 import { useTenantSettings } from "@/lib/useTenantSettings";
+import { orderStatusLabel } from "@/lib/orderStatus";
 
 interface OrderRow {
   _id: string;
@@ -55,6 +56,10 @@ const NOT_COLLECTIBLE = new Set(["CANCELLED", "REFUND_PENDING", "REFUNDED"]);
 // With no kitchen workflow, an order never reaches READY on its own — any of these active
 // statuses can be marked Served directly (mirrors orderLifecycle.service.ts's relaxed guard).
 const SERVABLE_WHEN_KITCHEN_DISABLED = new Set(["NEW", "ACCEPTED", "PREPARING", "READY"]);
+// These statuses can never happen going forward once kitchen is off — no point offering them
+// as filter options (a straggler order already in one of these before the toggle flipped
+// still shows up fine under "All statuses").
+const KITCHEN_ONLY_STATUSES = new Set(["ACCEPTED", "PREPARING", "READY"]);
 
 const STATUS_VARIANT: Record<string, "default" | "success" | "secondary" | "outline" | "danger"> = {
   PENDING_PAYMENT: "outline",
@@ -82,6 +87,8 @@ export default function OrdersPage() {
   const branding = useTenantBranding();
   const settings = useTenantSettings();
   const kitchenEnabled = settings.data?.ordering.kitchenEnabled ?? true;
+
+  const visibleStatuses = kitchenEnabled ? STATUSES : STATUSES.filter((s) => !KITCHEN_ONLY_STATUSES.has(s));
 
   const orders = useQuery({
     queryKey: ["admin-orders", status],
@@ -116,9 +123,9 @@ export default function OrdersPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">All statuses</SelectItem>
-            {STATUSES.map((s) => (
+            {visibleStatuses.map((s) => (
               <SelectItem key={s} value={s}>
-                {s}
+                {orderStatusLabel(s, kitchenEnabled)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -151,7 +158,9 @@ export default function OrdersPage() {
                 <div className="truncate text-text-muted">{order.items.map((i) => `${i.name} ×${i.quantity}`).join(", ")}</div>
                 <div className="font-semibold">{currency(order.totalAmount)}</div>
                 <div>
-                  <Badge variant={STATUS_VARIANT[order.orderStatus] ?? "outline"}>{order.orderStatus}</Badge>
+                  <Badge variant={STATUS_VARIANT[order.orderStatus] ?? "outline"}>
+                    {orderStatusLabel(order.orderStatus, kitchenEnabled)}
+                  </Badge>
                 </div>
                 <div className="text-text-muted">{order.paymentStatus}</div>
                 <div className="flex items-center gap-1">

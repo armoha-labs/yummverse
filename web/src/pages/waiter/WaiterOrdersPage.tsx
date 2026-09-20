@@ -63,7 +63,7 @@ export default function WaiterOrdersPage() {
                   #{order.orderNumber}
                   {tableLabel(order)}
                 </div>
-                <Badge variant="success">{kitchenEnabled ? "Ready" : "New"}</Badge>
+                <Badge variant="success">{kitchenEnabled ? "Ready" : "Placed"}</Badge>
               </div>
               <div className="text-xs text-text-muted">{order.items.map((i) => `${i.name} ×${i.quantity}`).join(", ")}</div>
               <Button size="sm" disabled={markServed.isPending} onClick={() => markServed.mutate(order._id)}>

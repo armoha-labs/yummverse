@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/apiClient";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useTenantSettings } from "@/lib/useTenantSettings";
+import { orderStatusLabel } from "@/lib/orderStatus";
 
 interface DashboardSummary {
   last7Days: {
@@ -49,6 +51,8 @@ const STATUS_VARIANT: Record<string, "default" | "success" | "secondary" | "outl
 };
 
 export default function DashboardPage() {
+  const settings = useTenantSettings();
+  const kitchenEnabled = settings.data?.ordering.kitchenEnabled ?? true;
   const summary = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => api.get<DashboardSummary>("/admin/dashboard"),
@@ -109,7 +113,9 @@ export default function DashboardPage() {
                 </div>
                 <div className="font-semibold">{currency(order.totalAmount)}</div>
                 <div>
-                  <Badge variant={STATUS_VARIANT[order.orderStatus] ?? "outline"}>{order.orderStatus}</Badge>
+                  <Badge variant={STATUS_VARIANT[order.orderStatus] ?? "outline"}>
+                    {orderStatusLabel(order.orderStatus, kitchenEnabled)}
+                  </Badge>
                 </div>
                 <div className="text-text-muted">{new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
               </div>
