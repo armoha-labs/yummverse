@@ -21,6 +21,14 @@ const tenantSettingsSchema = new Schema(
       enabled: { type: Boolean, default: true },
       allowMultipleOrdersPerTable: { type: Boolean, default: true },
       collectCustomerPhone: { type: Boolean, default: true },
+      // Off for a café that has no back-of-house kitchen workflow (e.g. a takeaway counter
+      // that just hands the order over) — when off, orders skip the Accept/Preparing/Ready
+      // stages entirely and can be marked Served directly, and the Kitchen screens are hidden.
+      kitchenEnabled: { type: Boolean, default: true },
+      // Off for a café that doesn't want to track table occupancy at all (e.g. pure takeaway,
+      // or counter service) — when off, tables never flip to OCCUPIED and the status badge is
+      // hidden from the Tables/Waiter screens.
+      tableStatusEnabled: { type: Boolean, default: true },
     },
 
     payment: {

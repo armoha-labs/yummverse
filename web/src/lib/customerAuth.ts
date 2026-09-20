@@ -12,6 +12,7 @@ export interface CustomerAuth {
   currency: string;
   tableNumber: string;
   allowPayLater: boolean;
+  kitchenEnabled: boolean;
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;

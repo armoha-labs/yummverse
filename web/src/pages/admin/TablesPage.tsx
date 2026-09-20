@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useTenantSettings } from "@/lib/useTenantSettings";
 
 interface Branch {
   _id: string;
@@ -29,6 +30,13 @@ interface Table {
 const schema = z.object({ tableNumber: z.string().min(1), branchId: z.string().optional() });
 type FormValues = z.infer<typeof schema>;
 
+function gridCols(isMultiBranch: boolean, tableStatusEnabled: boolean): string {
+  if (isMultiBranch) {
+    return tableStatusEnabled ? "grid-cols-[1fr_140px_120px_140px_160px]" : "grid-cols-[1fr_140px_160px]";
+  }
+  return tableStatusEnabled ? "grid-cols-[1fr_120px_140px_160px]" : "grid-cols-[1fr_160px]";
+}
+
 export default function TablesPage() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -39,6 +47,8 @@ export default function TablesPage() {
 
   const branches = useQuery({ queryKey: ["branches"], queryFn: () => api.get<Branch[]>("/admin/branches") });
   const isMultiBranch = (branches.data?.length ?? 0) > 1;
+  const settings = useTenantSettings();
+  const tableStatusEnabled = settings.data?.ordering.tableStatusEnabled ?? true;
 
   const tables = useQuery({
     queryKey: ["tables", filterBranchId],
@@ -178,23 +188,31 @@ export default function TablesPage() {
         <div className="overflow-x-auto">
           <div className={isMultiBranch ? "min-w-[760px]" : "min-w-[620px]"}>
             <div
-              className={`grid gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted ${isMultiBranch ? "grid-cols-[1fr_140px_120px_140px_160px]" : "grid-cols-[1fr_120px_140px_160px]"}`}
+              className={`grid gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted ${gridCols(isMultiBranch, tableStatusEnabled)}`}
             >
               <div>Table</div>
               {isMultiBranch && <div>Branch</div>}
-              <div>Status</div>
-              <div>Current Order</div>
+              {tableStatusEnabled && (
+                <>
+                  <div>Status</div>
+                  <div>Current Order</div>
+                </>
+              )}
               <div>Actions</div>
             </div>
             {tables.data?.map((table) => (
               <div
                 key={table._id}
-                className={`grid items-center gap-2 border-t border-border px-5 py-3 text-sm ${isMultiBranch ? "grid-cols-[1fr_140px_120px_140px_160px]" : "grid-cols-[1fr_120px_140px_160px]"}`}
+                className={`grid items-center gap-2 border-t border-border px-5 py-3 text-sm ${gridCols(isMultiBranch, tableStatusEnabled)}`}
               >
                 <div className="font-semibold">Table {table.tableNumber}</div>
                 {isMultiBranch && <div className="text-text-muted">{branchName(table.branchId)}</div>}
-                <Badge variant={table.status === "OCCUPIED" ? "default" : "outline"}>{table.status}</Badge>
-                <div className="text-text-muted">{table.currentOrderId ?? "—"}</div>
+                {tableStatusEnabled && (
+                  <>
+                    <Badge variant={table.status === "OCCUPIED" ? "default" : "outline"}>{table.status}</Badge>
+                    <div className="text-text-muted">{table.currentOrderId ?? "—"}</div>
+                  </>
+                )}
                 <div className="flex gap-1">
                   <Button size="icon" variant="ghost" title="View QR" onClick={() => viewQr(table._id)}>
                     <QrCode size={15} />

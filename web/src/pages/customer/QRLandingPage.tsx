@@ -8,7 +8,7 @@ import { ApiError } from "@/lib/apiClient";
 
 interface TableContext {
   table: { tableNumber: string; status: string };
-  branch: { id: string; name: string; allowPayLater: boolean };
+  branch: { id: string; name: string; allowPayLater: boolean; kitchenEnabled: boolean };
   tenant: {
     id: string;
     name: string;
@@ -57,6 +57,7 @@ export default function QRLandingPage() {
           currency: ctx.tenant.currency,
           tableNumber: ctx.table.tableNumber,
           allowPayLater: ctx.branch.allowPayLater,
+          kitchenEnabled: ctx.branch.kitchenEnabled,
           primaryColor: ctx.tenant.branding?.primaryColor,
           secondaryColor: ctx.tenant.branding?.secondaryColor,
           logoUrl: ctx.tenant.branding?.logoUrl,

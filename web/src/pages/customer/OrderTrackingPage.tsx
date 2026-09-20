@@ -78,6 +78,16 @@ const STEPS: Step[] = [
   { key: "served", label: "Served", done: (o) => Boolean(o.servedAt), at: (o) => o.servedAt },
 ];
 
+// A café with no kitchen workflow skips straight from NEW to SERVED (orderLifecycle.service.ts
+// relaxes the "served" transition when kitchen is disabled) — acceptedAt/preparingAt/readyAt
+// never get set, so the full 6-step tracker above would show three steps permanently stuck
+// "not done". This basic version only tracks what actually happens: pay, place, serve.
+const BASIC_STEPS: Step[] = [
+  STEPS[0]!,
+  { key: "received", label: "Order Placed", done: () => true },
+  { key: "served", label: "Served", done: (o) => Boolean(o.servedAt), at: (o) => o.servedAt },
+];
+
 function timeLabel(iso?: string): string {
   return iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
 }
@@ -145,18 +155,24 @@ export default function OrderTrackingPage() {
   // the pay-later opt-in at checkout (§23) — no separate flag needed to detect it here.
   // (PAYMENT_FAILED/CANCELLED already returned above, so orderStatus is narrowed past those.)
   const isPayLater = current.paymentStatus !== "PAID" && current.orderStatus !== "PENDING_PAYMENT";
+  const kitchenEnabled = auth?.kitchenEnabled ?? true;
+  const steps = kitchenEnabled ? STEPS : BASIC_STEPS;
 
   const heroLabel = current.servedAt
     ? "Order served — enjoy!"
-    : current.readyAt
-      ? "Your order is ready"
-      : current.preparingAt
-        ? "Preparing your order"
-        : current.acceptedAt
-          ? "Kitchen has accepted your order"
-          : current.paymentStatus === "PAID" || isPayLater
-            ? "Order received — waiting for the kitchen"
-            : "Confirming your payment";
+    : !kitchenEnabled
+      ? current.paymentStatus === "PAID" || isPayLater
+        ? "Order placed — we'll bring it right out"
+        : "Confirming your payment"
+      : current.readyAt
+        ? "Your order is ready"
+        : current.preparingAt
+          ? "Preparing your order"
+          : current.acceptedAt
+            ? "Kitchen has accepted your order"
+            : current.paymentStatus === "PAID" || isPayLater
+              ? "Order received — waiting for the kitchen"
+              : "Confirming your payment";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -179,10 +195,10 @@ export default function OrderTrackingPage() {
       </div>
 
       <div className="flex flex-1 flex-col px-6 py-1.5">
-        {STEPS.map((step, i) => {
+        {steps.map((step, i) => {
           const done = step.done(current);
-          const isLast = i === STEPS.length - 1;
-          const previous = STEPS[i - 1];
+          const isLast = i === steps.length - 1;
+          const previous = steps[i - 1];
           const active = step.isActive ? step.isActive(current) : !done && (i === 0 || Boolean(previous?.done(current)));
           const note = step.note?.(current, isPayLater);
           return (

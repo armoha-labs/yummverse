@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useTenantBranding } from "@/lib/useTenantBranding";
+import { useTenantSettings } from "@/lib/useTenantSettings";
 import { logout } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/apiClient";
@@ -46,7 +47,10 @@ export default function AdminLayout() {
   const auth = useAuth();
   const navigate = useNavigate();
   const branding = useTenantBranding();
+  const settings = useTenantSettings();
   const [navOpen, setNavOpen] = useState(false);
+  const kitchenEnabled = settings.data?.ordering.kitchenEnabled ?? true;
+  const nav = NAV.filter((item) => item.to !== "kitchen" || kitchenEnabled);
 
   useEffect(() => {
     void registerForPushNotifications(api.post);
@@ -80,7 +84,7 @@ export default function AdminLayout() {
       </div>
 
       <nav className="flex flex-col gap-0.5 overflow-y-auto">
-        {NAV.map(({ to, label, icon: Icon }) => (
+        {nav.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

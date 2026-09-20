@@ -3,6 +3,7 @@ import { orderRepository } from "../repositories/order.repository.js";
 import { ApiError } from "../utils/ApiError.js";
 import { realtimeEvents } from "../sockets/realtimeEvents.js";
 import { notificationService } from "../notifications/NotificationService.js";
+import { tenantSettingsService } from "./tenantSettings.service.js";
 import { logger } from "../config/logger.js";
 
 function fireAndForget(promise: Promise<void>): void {
@@ -34,10 +35,23 @@ async function applyTransition(
   transitionKey: keyof typeof TRANSITIONS,
 ) {
   const transition = TRANSITIONS[transitionKey];
+  const kitchenEnabled = await tenantSettingsService.isKitchenEnabled(tenantId);
+
+  if (!kitchenEnabled && transitionKey !== "served") {
+    throw ApiError.badRequest(
+      "KITCHEN_DISABLED",
+      "Kitchen workflow is turned off for this café — orders can be marked Served directly.",
+    );
+  }
+
   const order = await Order.findOne({ _id: orderId, tenantId, ...(branchId ? { branchId } : {}) });
   if (!order) throw ApiError.notFound("ORDER_NOT_FOUND", "Order not found.");
 
-  if (order.orderStatus !== transition.from) {
+  // With no kitchen workflow, an order never passes through ACCEPTED/PREPARING/READY — it
+  // just sits in NEW until a waiter/admin serves it directly, so "served" has to be reachable
+  // from any of the active statuses rather than strictly from READY.
+  const validFrom: OrderStatus[] = !kitchenEnabled && transitionKey === "served" ? ACTIVE_KITCHEN_STATUSES : [transition.from];
+  if (!validFrom.includes(order.orderStatus)) {
     throw ApiError.conflict(
       "INVALID_ORDER_TRANSITION",
       `Order is "${order.orderStatus}", expected "${transition.from}" for this action.`,

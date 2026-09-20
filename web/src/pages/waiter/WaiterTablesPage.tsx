@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/apiClient";
+import { useStaffBranding } from "@/lib/useTenantBranding";
 
 interface Table {
   _id: string;
@@ -9,6 +10,9 @@ interface Table {
 }
 
 export default function WaiterTablesPage() {
+  const branding = useStaffBranding();
+  const tableStatusEnabled = branding.data?.tableStatusEnabled ?? true;
+
   const tables = useQuery({
     queryKey: ["waiter-tables"],
     queryFn: () => api.get<Table[]>("/waiter/tables"),
@@ -21,19 +25,20 @@ export default function WaiterTablesPage() {
         <div
           key={table._id}
           className={`flex flex-col gap-2 rounded-card border bg-surface p-3.5 shadow-sm2 ${
-            table.status === "OCCUPIED" ? "border-2 border-accent" : "border-border"
+            tableStatusEnabled && table.status === "OCCUPIED" ? "border-2 border-accent" : "border-border"
           }`}
         >
           <div className="font-display text-[15px] font-bold">Table {table.tableNumber}</div>
-          {table.status === "OCCUPIED" ? (
-            <span className="w-fit rounded-full bg-accent px-2.5 py-1 text-[10.5px] font-bold text-white">
-              Occupied
-            </span>
-          ) : (
-            <span className="w-fit rounded-full bg-success-soft px-2.5 py-1 text-[10.5px] font-bold text-success">
-              Available
-            </span>
-          )}
+          {tableStatusEnabled &&
+            (table.status === "OCCUPIED" ? (
+              <span className="w-fit rounded-full bg-accent px-2.5 py-1 text-[10.5px] font-bold text-white">
+                Occupied
+              </span>
+            ) : (
+              <span className="w-fit rounded-full bg-success-soft px-2.5 py-1 text-[10.5px] font-bold text-success">
+                Available
+              </span>
+            ))}
         </div>
       ))}
       {tables.data?.length === 0 && (

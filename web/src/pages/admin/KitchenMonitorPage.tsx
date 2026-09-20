@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
+import { useTenantSettings } from "@/lib/useTenantSettings";
 
 interface OrderItem {
   name: string;
@@ -25,10 +26,14 @@ const COLUMNS: { status: OrderRow["orderStatus"]; label: string; action?: string
 
 export default function KitchenMonitorPage() {
   const queryClient = useQueryClient();
+  const settings = useTenantSettings();
+  const kitchenEnabled = settings.data?.ordering.kitchenEnabled ?? true;
+
   const orders = useQuery({
     queryKey: ["admin-kitchen-orders"],
     queryFn: () => api.get<OrderRow[]>("/admin/kitchen/orders"),
     refetchInterval: 5000,
+    enabled: kitchenEnabled,
   });
 
   const advance = useMutation({
@@ -36,6 +41,18 @@ export default function KitchenMonitorPage() {
       api.post(`/admin/kitchen/orders/${id}/${action}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-kitchen-orders"] }),
   });
+
+  if (settings.data && !kitchenEnabled) {
+    return (
+      <div className="flex flex-col gap-5">
+        <h1 className="font-display text-2xl font-extrabold">Kitchen Monitor</h1>
+        <div className="rounded-card border border-border bg-surface p-8 text-center text-sm text-text-muted shadow-sm2">
+          Kitchen workflow is turned off for this café. Orders are marked Served directly from
+          the Orders screen. Turn it back on under Settings → Operations.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">

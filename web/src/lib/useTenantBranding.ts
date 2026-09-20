@@ -17,6 +17,8 @@ interface PublicBranding {
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  kitchenEnabled: boolean;
+  tableStatusEnabled: boolean;
 }
 
 function applyThemeVars(primaryColor?: string, secondaryColor?: string) {

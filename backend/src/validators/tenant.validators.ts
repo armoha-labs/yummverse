@@ -33,6 +33,8 @@ export const updateSettingsSchema = z.object({
       enabled: z.boolean(),
       allowMultipleOrdersPerTable: z.boolean(),
       collectCustomerPhone: z.boolean(),
+      kitchenEnabled: z.boolean(),
+      tableStatusEnabled: z.boolean(),
     })
     .partial()
     .optional(),

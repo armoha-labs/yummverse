@@ -47,4 +47,17 @@ export const tenantSettingsService = {
 
     return settings;
   },
+
+  // Tenant-wide only — no per-branch override, unlike payment.allowPayLater/posCardEnabled —
+  // since a café's kitchen/table-tracking workflow is a fixed operational choice, not
+  // something that varies branch to branch.
+  async isKitchenEnabled(tenantId: string): Promise<boolean> {
+    const settings = await this.getOrCreate(tenantId);
+    return settings.ordering?.kitchenEnabled ?? true;
+  },
+
+  async isTableStatusEnabled(tenantId: string): Promise<boolean> {
+    const settings = await this.getOrCreate(tenantId);
+    return settings.ordering?.tableStatusEnabled ?? true;
+  },
 };

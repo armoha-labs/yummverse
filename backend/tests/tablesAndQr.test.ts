@@ -132,6 +132,30 @@ describe("public QR flow and customer sessions", () => {
     expect(tableAfter.body.data.status).toBe("OCCUPIED");
   });
 
+  it("with table status tracking disabled, scanning a QR never flips the table to OCCUPIED", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("qr-c");
+    await request(app)
+      .put("/api/v1/tenant/settings")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ ordering: { tableStatusEnabled: false } });
+
+    const table = await request(app)
+      .post("/api/v1/admin/tables")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ tableNumber: "9" });
+    const qrToken = table.body.data.qrToken as string;
+
+    const resolved = await request(app).get(`/api/v1/public/tables/${qrToken}`);
+    expect(resolved.body.data.table.status).toBe("AVAILABLE");
+
+    await request(app).post("/api/v1/customer/session").send({ qrToken });
+
+    const tableAfter = await request(app)
+      .get(`/api/v1/admin/tables/${table.body.data._id}`)
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(tableAfter.body.data.status).toBe("AVAILABLE");
+  });
+
   it("an unknown QR token returns 404, never leaking tenant existence", async () => {
     const app = createApp();
     const res = await request(app).get("/api/v1/public/tables/not-a-real-token");

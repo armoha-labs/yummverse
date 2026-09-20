@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Receipt } from "@/components/Receipt";
 import { printReceipt as printReceiptPage } from "@/lib/printReceipt";
 import { useTenantBranding } from "@/lib/useTenantBranding";
+import { useTenantSettings } from "@/lib/useTenantSettings";
 
 interface OrderRow {
   _id: string;
@@ -51,6 +52,9 @@ const STATUSES = [
 
 const CANCELLABLE = new Set(["NEW", "ACCEPTED", "PREPARING"]);
 const NOT_COLLECTIBLE = new Set(["CANCELLED", "REFUND_PENDING", "REFUNDED"]);
+// With no kitchen workflow, an order never reaches READY on its own — any of these active
+// statuses can be marked Served directly (mirrors orderLifecycle.service.ts's relaxed guard).
+const SERVABLE_WHEN_KITCHEN_DISABLED = new Set(["NEW", "ACCEPTED", "PREPARING", "READY"]);
 
 const STATUS_VARIANT: Record<string, "default" | "success" | "secondary" | "outline" | "danger"> = {
   PENDING_PAYMENT: "outline",
@@ -76,6 +80,8 @@ export default function OrdersPage() {
   const [printing, setPrinting] = useState<OrderDetail | null>(null);
   const queryClient = useQueryClient();
   const branding = useTenantBranding();
+  const settings = useTenantSettings();
+  const kitchenEnabled = settings.data?.ordering.kitchenEnabled ?? true;
 
   const orders = useQuery({
     queryKey: ["admin-orders", status],
@@ -84,6 +90,11 @@ export default function OrdersPage() {
 
   const cancel = useMutation({
     mutationFn: (id: string) => api.post(`/admin/orders/${id}/cancel`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
+  });
+
+  const markServed = useMutation({
+    mutationFn: (id: string) => api.post(`/admin/kitchen/orders/${id}/served`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
   });
 
@@ -147,6 +158,16 @@ export default function OrdersPage() {
                   {order.paymentStatus !== "PAID" && !NOT_COLLECTIBLE.has(order.orderStatus) && (
                     <Button size="sm" variant="outline" onClick={() => setCollecting(order)}>
                       Collect Payment
+                    </Button>
+                  )}
+                  {!kitchenEnabled && SERVABLE_WHEN_KITCHEN_DISABLED.has(order.orderStatus) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={markServed.isPending}
+                      onClick={() => markServed.mutate(order._id)}
+                    >
+                      Mark Served
                     </Button>
                   )}
                   {CANCELLABLE.has(order.orderStatus) && (

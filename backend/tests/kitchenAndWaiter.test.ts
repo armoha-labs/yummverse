@@ -234,6 +234,68 @@ describe("waiter workflow", () => {
     expect(again.status).toBe(409);
   });
 
+  it("with kitchen disabled, accept/preparing/ready are rejected and a waiter can serve a NEW order directly", async () => {
+    const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("kw-h");
+    await request(app)
+      .put("/api/v1/tenant/settings")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ ordering: { kitchenEnabled: false } });
+
+    const { orderId } = await setUpNewOrder(app, accessToken);
+    const kitchenToken = await createStaffAndLogin(
+      app,
+      "kw-h",
+      accessToken,
+      defaultBranch._id.toString(),
+      "KITCHEN",
+      "kitchen@kw-h.test",
+    );
+    const waiterToken = await createStaffAndLogin(
+      app,
+      "kw-h",
+      accessToken,
+      defaultBranch._id.toString(),
+      "WAITER",
+      "waiter@kw-h.test",
+    );
+
+    const blockedAccept = await request(app)
+      .post(`/api/v1/kitchen/orders/${orderId}/accept`)
+      .set("Authorization", `Bearer ${kitchenToken}`);
+    expect(blockedAccept.status).toBe(400);
+    expect(blockedAccept.body.error.code).toBe("KITCHEN_DISABLED");
+
+    const served = await request(app)
+      .post(`/api/v1/waiter/orders/${orderId}/served`)
+      .set("Authorization", `Bearer ${waiterToken}`);
+    expect(served.status).toBe(200);
+    expect(served.body.data.orderStatus).toBe("SERVED");
+    // Skipped straight from NEW to SERVED — no kitchen stage timestamps were ever set.
+    expect(served.body.data.acceptedAt).toBeFalsy();
+    expect(served.body.data.preparingAt).toBeFalsy();
+    expect(served.body.data.readyAt).toBeFalsy();
+  });
+
+  it("the public branding/QR lookups report kitchenEnabled so customer and staff screens can adapt", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("kw-i");
+    const { table } = await setUpNewOrder(app, accessToken);
+
+    const brandingBefore = await request(app).get("/api/v1/public/tenant/branding?tenantSlug=kw-i");
+    expect(brandingBefore.body.data.kitchenEnabled).toBe(true);
+    const qrBefore = await request(app).get(`/api/v1/public/tables/${table.body.data.qrToken}`);
+    expect(qrBefore.body.data.branch.kitchenEnabled).toBe(true);
+
+    await request(app)
+      .put("/api/v1/tenant/settings")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ ordering: { kitchenEnabled: false } });
+
+    const brandingAfter = await request(app).get("/api/v1/public/tenant/branding?tenantSlug=kw-i");
+    expect(brandingAfter.body.data.kitchenEnabled).toBe(false);
+    const qrAfter = await request(app).get(`/api/v1/public/tables/${table.body.data.qrToken}`);
+    expect(qrAfter.body.data.branch.kitchenEnabled).toBe(false);
+  });
+
   it("waiter cannot create or modify a QR customer's order directly (no such endpoint is exposed)", async () => {
     const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("kw-e");
     const waiterToken = await createStaffAndLogin(

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useStaffBranding } from "@/lib/useTenantBranding";
 
 interface OrderItem {
   name: string;
@@ -28,6 +29,9 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function WaiterOrdersPage() {
   const queryClient = useQueryClient();
+  const branding = useStaffBranding();
+  const kitchenEnabled = branding.data?.kitchenEnabled ?? true;
+
   const orders = useQuery({
     queryKey: ["waiter-orders"],
     queryFn: () => api.get<OrderRow[]>("/waiter/orders"),
@@ -42,8 +46,10 @@ export default function WaiterOrdersPage() {
     },
   });
 
-  const ready = orders.data?.filter((o) => o.orderStatus === "READY") ?? [];
-  const inProgress = orders.data?.filter((o) => o.orderStatus !== "READY") ?? [];
+  // With no kitchen workflow, an order never leaves NEW on its own — every active order is
+  // servable right away, so there's no separate "in progress" stage to wait out.
+  const ready = orders.data?.filter((o) => kitchenEnabled ? o.orderStatus === "READY" : true) ?? [];
+  const inProgress = kitchenEnabled ? orders.data?.filter((o) => o.orderStatus !== "READY") ?? [] : [];
 
   return (
     <div className="flex flex-col gap-3">
@@ -57,7 +63,7 @@ export default function WaiterOrdersPage() {
                   #{order.orderNumber}
                   {tableLabel(order)}
                 </div>
-                <Badge variant="success">Ready</Badge>
+                <Badge variant="success">{kitchenEnabled ? "Ready" : "New"}</Badge>
               </div>
               <div className="text-xs text-text-muted">{order.items.map((i) => `${i.name} ×${i.quantity}`).join(", ")}</div>
               <Button size="sm" disabled={markServed.isPending} onClick={() => markServed.mutate(order._id)}>

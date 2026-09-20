@@ -16,7 +16,12 @@ interface Profile {
 interface Settings {
   tax: { enabled: boolean; percentage: number };
   serviceCharge: { enabled: boolean; percentage: number };
-  ordering: { collectCustomerPhone: boolean; allowMultipleOrdersPerTable: boolean };
+  ordering: {
+    collectCustomerPhone: boolean;
+    allowMultipleOrdersPerTable: boolean;
+    kitchenEnabled: boolean;
+    tableStatusEnabled: boolean;
+  };
   payment: { allowPayLater: boolean; posCardEnabled: boolean };
 }
 
@@ -144,6 +149,25 @@ function OperationsTab() {
           save.mutate({ ordering: { ...s.ordering, allowMultipleOrdersPerTable } })
         }
       />
+      <ToggleRow
+        label="Kitchen Workflow"
+        checked={s.ordering.kitchenEnabled}
+        onCheckedChange={(kitchenEnabled) => save.mutate({ ordering: { ...s.ordering, kitchenEnabled } })}
+      />
+      <div className="-mt-2 pl-0 text-xs text-text-muted">
+        Off for a café with no back-of-house kitchen — orders skip Accept/Preparing/Ready and
+        can be marked Served directly, the Kitchen screens are hidden, and customers just see
+        "Order Placed" instead of a stage-by-stage tracker.
+      </div>
+      <ToggleRow
+        label="Table Status Tracking"
+        checked={s.ordering.tableStatusEnabled}
+        onCheckedChange={(tableStatusEnabled) => save.mutate({ ordering: { ...s.ordering, tableStatusEnabled } })}
+      />
+      <div className="-mt-2 pl-0 text-xs text-text-muted">
+        Off for a café that doesn't track table occupancy (e.g. takeaway/counter service) —
+        tables never show an Available/Occupied status.
+      </div>
       <ToggleRow
         label="Accept Payment Later (Pay at Counter)"
         checked={s.payment.allowPayLater}

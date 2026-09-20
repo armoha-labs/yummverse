@@ -6,6 +6,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { generateToken, hashToken } from "../utils/password.js";
 import { Table } from "../models/Table.js";
 import { realtimeEvents } from "../sockets/realtimeEvents.js";
+import { tenantSettingsService } from "./tenantSettings.service.js";
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours — a typical dining session
 
@@ -50,7 +51,7 @@ export const customerSessionService = {
       expiresAt: new Date(Date.now() + SESSION_TTL_MS),
     });
 
-    if (table.status !== "OCCUPIED") {
+    if (table.status !== "OCCUPIED" && (await tenantSettingsService.isTableStatusEnabled(tenant._id.toString()))) {
       await Table.updateOne({ _id: table._id }, { status: "OCCUPIED" });
       realtimeEvents.tableStatusChanged(tenant._id.toString(), branch._id.toString(), {
         tableId: table._id,

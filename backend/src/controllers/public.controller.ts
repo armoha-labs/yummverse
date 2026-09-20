@@ -3,6 +3,7 @@ import { resolveQrContext } from "../services/customerSession.service.js";
 import { resolveTenantBySlug } from "../tenant/context.js";
 import { publicMenuService } from "../services/publicMenu.service.js";
 import { resolveAllowPayLater } from "../services/orderCalculation.service.js";
+import { tenantSettingsService } from "../services/tenantSettings.service.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -11,11 +12,15 @@ import { qrTokenParamSchema, tenantSlugQuerySchema } from "../validators/public.
 export const getTableByQrToken = asyncHandler(async (req: Request, res: Response) => {
   const { qrToken } = qrTokenParamSchema.parse(req.params);
   const { table, branch, tenant } = await resolveQrContext(qrToken);
-  const allowPayLater = await resolveAllowPayLater(tenant._id.toString(), branch._id.toString());
+  const tenantId = tenant._id.toString();
+  const [allowPayLater, kitchenEnabled] = await Promise.all([
+    resolveAllowPayLater(tenantId, branch._id.toString()),
+    tenantSettingsService.isKitchenEnabled(tenantId),
+  ]);
 
   sendSuccess(res, {
     table: { tableNumber: table.tableNumber, status: table.status },
-    branch: { id: branch._id, name: branch.name, allowPayLater },
+    branch: { id: branch._id, name: branch.name, allowPayLater, kitchenEnabled },
     tenant: {
       id: tenant._id,
       name: tenant.name,
@@ -29,9 +34,16 @@ export const getTableByQrToken = asyncHandler(async (req: Request, res: Response
 export const getTenantBranding = asyncHandler(async (req: Request, res: Response) => {
   const { tenantSlug } = tenantSlugQuerySchema.parse(req.query);
   const tenant = await resolveTenantBySlug(tenantSlug);
+  const tenantId = tenant._id.toString();
+  const [kitchenEnabled, tableStatusEnabled] = await Promise.all([
+    tenantSettingsService.isKitchenEnabled(tenantId),
+    tenantSettingsService.isTableStatusEnabled(tenantId),
+  ]);
   // §32's staff login page renders "logo, name, colors" from this public lookup — name is
   // not sensitive (it's on the QR-landing response too) and is required for that branding.
-  sendSuccess(res, { name: tenant.name, ...(tenant.branding ?? {}) });
+  // Also doubles as the one shared "café workflow settings" lookup for every staff screen
+  // (Waiter/Kitchen) that isn't allowed to call /tenant/settings (Tenant Admin only).
+  sendSuccess(res, { name: tenant.name, ...(tenant.branding ?? {}), kitchenEnabled, tableStatusEnabled });
 });
 
 // §22B: the client fetches the full menu once, right after the QR/table token resolves
