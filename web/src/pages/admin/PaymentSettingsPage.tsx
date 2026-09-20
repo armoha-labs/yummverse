@@ -12,12 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface Branch {
-  _id: string;
-  name: string;
-  isDefault: boolean;
-}
-
 interface PaymentSettings {
   provider: string;
   currency: string;
@@ -26,7 +20,6 @@ interface PaymentSettings {
   keyId: string | null;
   hasKeySecret: boolean;
   hasWebhookSecret: boolean;
-  isOverride: boolean;
 }
 
 interface FormValues {
@@ -61,15 +54,11 @@ export default function PaymentSettingsPage() {
 
 function SettingsTab() {
   const queryClient = useQueryClient();
-  const [branchId, setBranchId] = useState<string>("");
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
 
-  const branches = useQuery({ queryKey: ["branches"], queryFn: () => api.get<Branch[]>("/admin/branches") });
-  const isMultiBranch = (branches.data?.length ?? 0) > 1;
-
   const settings = useQuery({
-    queryKey: ["payment-settings", branchId],
-    queryFn: () => api.get<PaymentSettings | null>(`/tenant/payment-settings${branchId ? `?branchId=${branchId}` : ""}`),
+    queryKey: ["payment-settings"],
+    queryFn: () => api.get<PaymentSettings | null>("/tenant/payment-settings"),
   });
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<FormValues>({
@@ -101,17 +90,9 @@ function SettingsTab() {
       };
       if (data.keySecret) body.keySecret = data.keySecret;
       if (data.webhookSecret) body.webhookSecret = data.webhookSecret;
-      return api.put(`/tenant/payment-settings${branchId ? `?branchId=${branchId}` : ""}`, body);
+      return api.put("/tenant/payment-settings", body);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["payment-settings"] }),
-  });
-
-  const clearOverride = useMutation({
-    mutationFn: () => api.delete(`/tenant/payment-settings?branchId=${branchId}`),
-    onSuccess: () => {
-      setBranchId("");
-      queryClient.invalidateQueries({ queryKey: ["payment-settings"] });
-    },
   });
 
   const testConnection = useMutation({
@@ -120,10 +101,11 @@ function SettingsTab() {
       // Test whatever's currently in the form (not yet saved) — falls back on the backend to
       // the already-saved Key Secret when this is blank, same "leave blank to keep"
       // convention Save uses, so re-testing after just changing the currency still works.
-      return api.post<{ ok: boolean; message: string }>(
-        `/tenant/payment-settings/test${branchId ? `?branchId=${branchId}` : ""}`,
-        { provider: data.provider, keyId: data.keyId || undefined, keySecret: data.keySecret || undefined },
-      );
+      return api.post<{ ok: boolean; message: string }>("/tenant/payment-settings/test", {
+        provider: data.provider,
+        keyId: data.keyId || undefined,
+        keySecret: data.keySecret || undefined,
+      });
     },
     onSuccess: (result) => setTestResult(result),
     onError: (err) => setTestResult({ ok: false, message: err instanceof ApiError ? err.message : "Test failed." }),
@@ -131,30 +113,6 @@ function SettingsTab() {
 
   return (
     <div className="flex max-w-xl flex-col gap-5">
-      {isMultiBranch && (
-        <div className="flex flex-wrap items-center gap-3">
-          <Label>Configuring for</Label>
-          <Select value={branchId || "TENANT"} onValueChange={(v) => setBranchId(v === "TENANT" ? "" : v)}>
-            <SelectTrigger className="w-56">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="TENANT">Tenant-wide default</SelectItem>
-              {branches.data?.map((b) => (
-                <SelectItem key={b._id} value={b._id}>
-                  {b.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {branchId && settings.data?.isOverride && (
-            <Button size="sm" variant="ghost" onClick={() => clearOverride.mutate()}>
-              Use tenant-wide default instead
-            </Button>
-          )}
-        </div>
-      )}
-
       <form onSubmit={handleSubmit((data) => save.mutate(data))} className="flex flex-col gap-4 rounded-card border border-border bg-surface p-6 shadow-sm2">
         <div className="flex flex-col gap-1.5">
           <Label>Provider</Label>

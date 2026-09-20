@@ -6,12 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface Branch {
-  _id: string;
-  name: string;
-  isDefault: boolean;
-}
-
 interface Category {
   _id: string;
   name: string;
@@ -50,12 +44,9 @@ function currency(n: number): string {
 }
 
 /** §23A.2's counter-ordering flow — a Tenant Admin keying in a walk-in order themselves
- * rather than the customer's own QR device. Same POS endpoints a Waiter would use; this
- * screen just also lets the admin pick a branch, since admin sessions aren't branch-locked
- * the way a Waiter's token is. */
+ * rather than the customer's own QR device. Same POS endpoints a Waiter would use. */
 export default function PosOrderPage() {
   const queryClient = useQueryClient();
-  const [branchId, setBranchId] = useState("");
   const [tableId, setTableId] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [search, setSearch] = useState("");
@@ -64,25 +55,12 @@ export default function PosOrderPage() {
   const [method, setMethod] = useState<"CASH" | "POS_CARD">("CASH");
   const [error, setError] = useState<string | null>(null);
 
-  const branches = useQuery({ queryKey: ["branches"], queryFn: () => api.get<Branch[]>("/admin/branches") });
-  const isMultiBranch = (branches.data?.length ?? 0) > 1;
-  const effectiveBranchId = branchId || branches.data?.find((b) => b.isDefault)?._id || branches.data?.[0]?._id || "";
-
   const categories = useQuery({ queryKey: ["categories"], queryFn: () => api.get<Category[]>("/admin/categories") });
-  const menu = useQuery({
-    queryKey: ["pos-menu", effectiveBranchId],
-    queryFn: () => api.get<MenuItem[]>(`/pos/menu?branchId=${effectiveBranchId}`),
-    enabled: Boolean(effectiveBranchId),
-  });
-  const tables = useQuery({
-    queryKey: ["pos-tables", effectiveBranchId],
-    queryFn: () => api.get<Table[]>(`/admin/tables?branchId=${effectiveBranchId}`),
-    enabled: Boolean(effectiveBranchId),
-  });
+  const menu = useQuery({ queryKey: ["pos-menu"], queryFn: () => api.get<MenuItem[]>("/pos/menu") });
+  const tables = useQuery({ queryKey: ["pos-tables"], queryFn: () => api.get<Table[]>("/admin/tables") });
   const posSettings = useQuery({
-    queryKey: ["pos-settings", effectiveBranchId],
-    queryFn: () => api.get<{ posCardEnabled: boolean }>(`/pos/settings?branchId=${effectiveBranchId}`),
-    enabled: Boolean(effectiveBranchId),
+    queryKey: ["pos-settings"],
+    queryFn: () => api.get<{ posCardEnabled: boolean }>("/pos/settings"),
   });
   // Card (POS terminal) only shows up once a café has actually enabled it (Settings →
   // Operations) — until then it's not a real card-present integration, just a staff-trusted
@@ -131,7 +109,6 @@ export default function PosOrderPage() {
       api.post<CreatedOrder>("/pos/orders", {
         items: cart.map((l) => ({ menuItemId: l.menuItemId, quantity: l.quantity })),
         tableId: tableId || undefined,
-        branchId: isMultiBranch ? effectiveBranchId : undefined,
       }),
     onSuccess: (order) => {
       setCreatedOrder(order);
@@ -195,20 +172,6 @@ export default function PosOrderPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-2xl font-extrabold">New Counter Order</h1>
           <div className="flex flex-wrap gap-2">
-            {isMultiBranch && (
-              <Select value={effectiveBranchId} onValueChange={setBranchId}>
-                <SelectTrigger className="w-44">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {branches.data?.map((b) => (
-                    <SelectItem key={b._id} value={b._id}>
-                      {b.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
             <Select value={tableId || "TAKEAWAY"} onValueChange={(v) => setTableId(v === "TAKEAWAY" ? "" : v)}>
               <SelectTrigger className="w-44">
                 <SelectValue />

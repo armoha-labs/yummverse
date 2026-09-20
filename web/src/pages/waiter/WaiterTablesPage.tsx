@@ -42,7 +42,7 @@ export default function WaiterTablesPage() {
         </div>
       ))}
       {tables.data?.length === 0 && (
-        <div className="col-span-2 py-10 text-center text-sm text-text-muted">No tables in this branch yet.</div>
+        <div className="col-span-2 py-10 text-center text-sm text-text-muted">No tables yet.</div>
       )}
     </div>
   );

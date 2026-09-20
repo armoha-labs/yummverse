@@ -173,8 +173,6 @@ describe("reports (§46)", () => {
     expect(revenue.status).toBe(200);
     expect(revenue.body.data.grossRevenue).toBe(105); // 100 subtotal + 5 tax = totalAmount
     expect(revenue.body.data.orderCount).toBe(1);
-    expect(revenue.body.data.revenueByBranch[0].branchId).toBe(defaultBranch._id.toString());
-    expect(revenue.body.data.revenueByBranch[0].branchName).toBe("Main Branch"); // not the raw id
 
     const tax = await request(app)
       .get("/api/v1/tenant/reports/tax")

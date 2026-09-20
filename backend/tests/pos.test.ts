@@ -203,8 +203,8 @@ describe("POS / counter ordering (§23A)", () => {
     expect(settings.body.data.posCardEnabled).toBe(false);
   });
 
-  it("accepts POS_CARD once the tenant enables it, and a branch override can turn it back off", async () => {
-    const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("pos-f");
+  it("accepts POS_CARD once the tenant enables it", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("pos-f");
     const itemId = await setUpMenu(app, accessToken);
 
     await request(app)
@@ -227,50 +227,13 @@ describe("POS / counter ordering (§23A)", () => {
       .send({ method: "POS_CARD" });
     expect(pay.status).toBe(200);
     expect(pay.body.data.payment.method).toBe("POS_CARD");
-
-    // Branch override turns it back off for this branch specifically, independent of the
-    // tenant-wide default that's still on.
-    const branchId = defaultBranch._id.toString();
-    await request(app)
-      .put(`/api/v1/admin/branches/${branchId}`)
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ settings: { payment: { posCardEnabled: false } } });
-
-    const branchSettings = await request(app)
-      .get(`/api/v1/pos/settings?branchId=${branchId}`)
-      .set("Authorization", `Bearer ${accessToken}`);
-    expect(branchSettings.body.data.posCardEnabled).toBe(false);
   });
 
-  it("setting posCardEnabled on a branch doesn't reset an already-set allowPayLater override (and vice versa)", async () => {
-    const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("pos-g");
-    const branchId = defaultBranch._id.toString();
-
-    await request(app)
-      .put(`/api/v1/admin/branches/${branchId}`)
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ settings: { payment: { allowPayLater: true } } });
-
-    // Setting ONLY posCardEnabled afterward must not silently reintroduce an
-    // allowPayLater: false override that was never asked for.
-    await request(app)
-      .put(`/api/v1/admin/branches/${branchId}`)
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ settings: { payment: { posCardEnabled: true } } });
-
-    const branches = await request(app)
-      .get("/api/v1/admin/branches")
-      .set("Authorization", `Bearer ${accessToken}`);
-    const branch = branches.body.data.find((b: { _id: string }) => b._id === branchId);
-    expect(branch.settings.payment.allowPayLater).toBe(true);
-    expect(branch.settings.payment.posCardEnabled).toBe(true);
-  });
-
-  it("rejects an item unavailable at this branch, same rule as QR ordering", async () => {
-    const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("pos-d");
+  it("rejects an unavailable item in a POS order, same rule as QR ordering", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("pos-d");
     const itemId = await setUpMenu(app, accessToken);
     await request(app)
-      .put(`/api/v1/admin/menu-items/${itemId}/branch-overrides/${defaultBranch._id.toString()}`)
+      .patch(`/api/v1/admin/menu-items/${itemId}/availability`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ isAvailable: false });
 

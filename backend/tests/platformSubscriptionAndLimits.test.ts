@@ -18,7 +18,7 @@ async function createPlatformAdminAndLogin(slug: string) {
 }
 
 describe("tenant subscription (§47)", () => {
-  it("defaults a new tenant to the FREE plan, which limits it to 1 branch", async () => {
+  it("defaults a new tenant to the FREE plan, with the FREE plan's staff/table limits", async () => {
     const { app, accessToken } = await createPlatformAdminAndLogin("plat-a");
 
     const created = await request(app)
@@ -32,10 +32,11 @@ describe("tenant subscription (§47)", () => {
       .get(`/api/v1/platform/tenants/${tenantId}/limits`)
       .set("Authorization", `Bearer ${accessToken}`);
     expect(limits.status).toBe(200);
-    expect(limits.body.data.effective.maxBranches).toBe(1);
+    expect(limits.body.data.effective.maxStaffUsers).toBe(5);
+    expect(limits.body.data.effective.maxTables).toBe(10);
   });
 
-  it("upgrading the plan raises the effective branch limit without any override", async () => {
+  it("upgrading the plan raises the effective limits without any override", async () => {
     const { app, accessToken } = await createPlatformAdminAndLogin("plat-b");
     const created = await request(app)
       .post("/api/v1/platform/tenants")
@@ -53,7 +54,7 @@ describe("tenant subscription (§47)", () => {
     const limits = await request(app)
       .get(`/api/v1/platform/tenants/${tenantId}/limits`)
       .set("Authorization", `Bearer ${accessToken}`);
-    expect(limits.body.data.effective.maxBranches).toBe(5);
+    expect(limits.body.data.effective.maxStaffUsers).toBe(50);
 
     const actions = (await AuditLog.find({ tenantId })).map((a) => a.action);
     expect(actions).toContain("TENANT_SUBSCRIPTION_UPDATED");
@@ -69,31 +70,18 @@ describe("tenant limits & feature overrides (§7A)", () => {
       .send({ name: "Pilot Café", slug: "pilot-cafe", adminName: "Admin", adminEmail: "admin@pilot-cafe.test" });
     const tenantId = created.body.data.tenant._id;
 
-    // FREE plan normally allows 1 branch — grant this tenant an exception to pilot 3.
+    // FREE plan normally allows 10 tables — grant this tenant an exception to pilot 30.
     const overridden = await request(app)
       .put(`/api/v1/platform/tenants/${tenantId}/limits`)
       .set("Authorization", `Bearer ${accessToken}`)
-      .send({ overrides: { maxBranches: 3 } });
+      .send({ overrides: { maxTables: 30 } });
     expect(overridden.status).toBe(200);
-    expect(overridden.body.data.effective.maxBranches).toBe(3);
+    expect(overridden.body.data.effective.maxTables).toBe(30);
     // untouched fields still fall through to the FREE plan default
     expect(overridden.body.data.effective.maxStaffUsers).toBe(5);
 
     const actions = (await AuditLog.find({ tenantId })).map((a) => a.action);
     expect(actions).toContain("TENANT_LIMITS_UPDATED");
-  });
-
-  it("the override actually gates branch creation for that tenant", async () => {
-    const { app, accessToken } = await createPlatformAdminAndLogin("plat-d");
-    const created = await request(app)
-      .post("/api/v1/platform/tenants")
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ name: "Capped Café", slug: "capped-cafe", adminName: "Admin", adminEmail: "admin@capped-cafe.test" });
-    const tenantId = created.body.data.tenant._id;
-
-    const { tenantLimitsService } = await import("../src/services/tenantLimits.service.js");
-    const maxBranches = await tenantLimitsService.resolveMaxBranches(tenantId);
-    expect(maxBranches).toBe(1); // FREE plan default, no override set
   });
 });
 

@@ -6,8 +6,6 @@ import {
   ChefHat,
   UtensilsCrossed,
   Armchair,
-  Building2,
-  Users,
   CreditCard,
   BarChart3,
   Settings,
@@ -25,6 +23,8 @@ import { logout } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/apiClient";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
+import { PrintReceiptProvider, usePrintReceipt } from "@/lib/usePrintReceipt";
+import { useAdminOrderSocket } from "@/lib/useAdminOrderSocket";
 import { PageLoading } from "@/components/PageLoading";
 
 // Relative to the current match (/:tenantSlug/admin) so the café slug in the URL is
@@ -36,8 +36,6 @@ const NAV = [
   { to: "kitchen", label: "Kitchen", icon: ChefHat },
   { to: "menu", label: "Menu", icon: UtensilsCrossed },
   { to: "tables", label: "Tables", icon: Armchair },
-  { to: "branches", label: "Branches", icon: Building2 },
-  { to: "staff", label: "Staff", icon: Users },
   { to: "payment-settings", label: "Payments", icon: CreditCard },
   { to: "integrations", label: "Integrations", icon: Plug },
   { to: "reports", label: "Reports", icon: BarChart3 },
@@ -45,6 +43,17 @@ const NAV = [
 ];
 
 export default function AdminLayout() {
+  // The single admin-wide <Receipt> instance lives in this provider (see usePrintReceipt.tsx
+  // for why there must be exactly one) so it's available for the whole session — the Orders
+  // page's manual print button and the real-time auto-print below share it.
+  return (
+    <PrintReceiptProvider>
+      <AdminLayoutContent />
+    </PrintReceiptProvider>
+  );
+}
+
+function AdminLayoutContent() {
   const auth = useAuth();
   const navigate = useNavigate();
   const branding = useTenantBranding();
@@ -59,6 +68,12 @@ export default function AdminLayout() {
   useEffect(() => {
     void registerForPushNotifications(api.post);
   }, []);
+
+  // Prints a receipt the instant a new order arrives, on whichever admin page happens to be
+  // open — not just the Orders page — since the café's counter device should react to a new
+  // order the moment it comes in, not only while someone's looking at the order list.
+  const { printOrder } = usePrintReceipt();
+  useAdminOrderSocket(printOrder);
 
   async function onLogout() {
     await logout();

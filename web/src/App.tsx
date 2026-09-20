@@ -19,8 +19,6 @@ const PosOrderPage = lazy(() => import("@/pages/admin/PosOrderPage"));
 const KitchenMonitorPage = lazy(() => import("@/pages/admin/KitchenMonitorPage"));
 const MenuManagementPage = lazy(() => import("@/pages/admin/MenuManagementPage"));
 const TablesPage = lazy(() => import("@/pages/admin/TablesPage"));
-const BranchesPage = lazy(() => import("@/pages/admin/BranchesPage"));
-const StaffPage = lazy(() => import("@/pages/admin/StaffPage"));
 const PaymentSettingsPage = lazy(() => import("@/pages/admin/PaymentSettingsPage"));
 const IntegrationSettingsPage = lazy(() => import("@/pages/admin/IntegrationSettingsPage"));
 const ReportsPage = lazy(() => import("@/pages/admin/ReportsPage"));
@@ -75,8 +73,6 @@ export default function App() {
           <Route path="kitchen" element={<KitchenMonitorPage />} />
           <Route path="menu" element={<MenuManagementPage />} />
           <Route path="tables" element={<TablesPage />} />
-          <Route path="branches" element={<BranchesPage />} />
-          <Route path="staff" element={<StaffPage />} />
           <Route path="payment-settings" element={<PaymentSettingsPage />} />
           <Route path="integrations" element={<IntegrationSettingsPage />} />
           <Route path="reports" element={<ReportsPage />} />

@@ -18,7 +18,6 @@ export interface CreateStaffInput {
   email: string;
   phone?: string;
   role: StaffRole; // restricted to WAITER|KITCHEN at the validator layer (§8A.3)
-  branchId: string;
 }
 
 async function buildInviteLink(tenantId: string, email: string, inviteToken: string): Promise<string | undefined> {
@@ -57,7 +56,7 @@ export const staffService = {
   },
 
   async create(tenantId: string, input: CreateStaffInput, actor: Actor) {
-    const branch = await branchRepository.findById(tenantId, input.branchId);
+    const branch = await branchRepository.findDefaultForTenant(tenantId);
     if (!branch) throw ApiError.notFound("BRANCH_NOT_FOUND", "Branch not found.");
 
     const existing = await userRepository.findByTenantAndEmail(tenantId, input.email);
@@ -67,7 +66,7 @@ export const staffService = {
 
     const user = await userRepository.create({
       tenantId,
-      branchId: input.branchId,
+      branchId: branch._id.toString(),
       name: input.name,
       email: input.email,
       phone: input.phone,
@@ -93,20 +92,10 @@ export const staffService = {
     return { user, inviteToken };
   },
 
-  async update(
-    tenantId: string,
-    userId: string,
-    updates: { name?: string; phone?: string; branchId?: string },
-    actor: Actor,
-  ) {
+  async update(tenantId: string, userId: string, updates: { name?: string; phone?: string }, actor: Actor) {
     const user = await userRepository.findById(tenantId, userId);
     if (!user) throw ApiError.notFound("USER_NOT_FOUND", "Staff member not found.");
 
-    if (updates.branchId) {
-      const branch = await branchRepository.findById(tenantId, updates.branchId);
-      if (!branch) throw ApiError.notFound("BRANCH_NOT_FOUND", "Branch not found.");
-      user.branchId = updates.branchId as never;
-    }
     if (updates.name !== undefined) user.name = updates.name;
     if (updates.phone !== undefined) user.phone = updates.phone;
     await user.save();

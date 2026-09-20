@@ -110,25 +110,6 @@ export default function OrderTrackingPage() {
   });
 
   const current = status.data ?? detail.data;
-  const paymentStatus = current?.paymentStatus;
-
-  // Auto-print the receipt the first time this order is seen as PAID (once per order, per
-  // device) — covers both the "pay now" redirect straight from checkout and a pay-later
-  // order that flips to PAID while this page is already open.
-  useEffect(() => {
-    if (!orderId || paymentStatus !== "PAID") return;
-    const key = `receipt-printed-${orderId}`;
-    try {
-      if (localStorage.getItem(key)) return;
-      localStorage.setItem(key, "1");
-    } catch {
-      // Storage unavailable (e.g. private browsing) — print anyway; worst case it reprints
-      // on a later poll tick.
-    }
-    setShowReceipt(true);
-    const timer = setTimeout(() => printReceipt(), 300);
-    return () => clearTimeout(timer);
-  }, [orderId, paymentStatus]);
 
   // Asked here rather than on landing/menu — "get notified when your order is ready" is an
   // obvious value proposition once there's an actual order to track, not before.

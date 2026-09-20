@@ -151,9 +151,15 @@ describe("category & menu item management", () => {
   });
 });
 
-describe("branch menu availability overrides (§6A.4)", () => {
-  it("a branch override marks an item unavailable at that branch without touching the shared menu", async () => {
-    const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("menu-f");
+describe("public menu", () => {
+  it("public categories and menu require a customer session, never trusting a bare tenant id", async () => {
+    const app = createApp();
+    const res = await request(app).get("/api/v1/public/menu");
+    expect(res.status).toBe(401);
+  });
+
+  it("an item marked unavailable is reflected on the public menu", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("menu-f");
     const category = await request(app)
       .post("/api/v1/admin/categories")
       .set("Authorization", `Bearer ${accessToken}`)
@@ -163,20 +169,11 @@ describe("branch menu availability overrides (§6A.4)", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ categoryId: category.body.data._id, name: "Mocha", price: 160 });
 
-    const branchId = defaultBranch._id.toString();
-    const override = await request(app)
-      .put(`/api/v1/admin/menu-items/${item.body.data._id}/branch-overrides/${branchId}`)
+    await request(app)
+      .patch(`/api/v1/admin/menu-items/${item.body.data._id}/availability`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ isAvailable: false });
-    expect(override.status).toBe(200);
 
-    // the master menu item is untouched
-    const masterItem = await request(app)
-      .get(`/api/v1/admin/menu-items?categoryId=${category.body.data._id}`)
-      .set("Authorization", `Bearer ${accessToken}`);
-    expect(masterItem.body.data[0].isAvailable).toBe(true);
-
-    // but the customer-facing menu for this branch reflects the override
     const table = await request(app)
       .post("/api/v1/admin/tables")
       .set("Authorization", `Bearer ${accessToken}`)
@@ -184,21 +181,14 @@ describe("branch menu availability overrides (§6A.4)", () => {
     const session = await request(app)
       .post("/api/v1/customer/session")
       .send({ qrToken: table.body.data.qrToken });
-    const sessionToken = session.body.data.sessionToken;
 
     const publicMenu = await request(app)
       .get("/api/v1/public/menu")
-      .set("Authorization", `Bearer ${sessionToken}`);
+      .set("Authorization", `Bearer ${session.body.data.sessionToken}`);
     expect(publicMenu.status).toBe(200);
     const mocha = publicMenu.body.data.find((i: { name: string }) => i.name === "Mocha");
     expect(mocha.isAvailable).toBe(false);
     expect(mocha.categoryId).toBe(category.body.data._id);
-  });
-
-  it("public categories and menu require a customer session, never trusting a bare tenant id", async () => {
-    const app = createApp();
-    const res = await request(app).get("/api/v1/public/menu");
-    expect(res.status).toBe(401);
   });
 
   it("uploads a menu item photo as base64 (primary) with a local-disk backup, replaces, removes, and surfaces it on the public menu", async () => {

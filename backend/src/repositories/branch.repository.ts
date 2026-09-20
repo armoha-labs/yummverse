@@ -12,18 +12,6 @@ export const branchRepository = {
     });
   },
 
-  create(tenantId: string | Types.ObjectId, input: { name: string; slug: string } & Record<string, unknown>) {
-    return Branch.create({ ...input, tenantId, isDefault: false, status: "ACTIVE" });
-  },
-
-  countForTenant(tenantId: string | Types.ObjectId) {
-    return Branch.countDocuments({ tenantId });
-  },
-
-  findBySlug(tenantId: string | Types.ObjectId, slug: string) {
-    return Branch.findOne({ tenantId, slug });
-  },
-
   findDefaultForTenant(tenantId: string | Types.ObjectId) {
     return Branch.findOne({ tenantId, isDefault: true });
   },

@@ -156,29 +156,6 @@ describe("public QR flow and customer sessions", () => {
     expect(tableAfter.body.data.status).toBe("AVAILABLE");
   });
 
-  it("a branch-level override re-enables table status tracking for that branch even with the tenant default off", async () => {
-    const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("qr-d");
-    await request(app)
-      .put("/api/v1/tenant/settings")
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ ordering: { tableStatusEnabled: false } });
-    await request(app)
-      .put(`/api/v1/admin/branches/${defaultBranch._id.toString()}`)
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ settings: { ordering: { tableStatusEnabled: true } } });
-
-    const table = await request(app)
-      .post("/api/v1/admin/tables")
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ tableNumber: "10" });
-    await request(app).post("/api/v1/customer/session").send({ qrToken: table.body.data.qrToken });
-
-    const tableAfter = await request(app)
-      .get(`/api/v1/admin/tables/${table.body.data._id}`)
-      .set("Authorization", `Bearer ${accessToken}`);
-    expect(tableAfter.body.data.status).toBe("OCCUPIED");
-  });
-
   it("an unknown QR token returns 404, never leaking tenant existence", async () => {
     const app = createApp();
     const res = await request(app).get("/api/v1/public/tables/not-a-real-token");

@@ -41,7 +41,7 @@ export const reportService = {
   async revenue(tenantId: string, range: ReportRange) {
     const paidMatch = matchStage(tenantId, range, { paymentStatus: "PAID" });
 
-    const [current, previous, byMethod, byBranch, trend, branchNames] = await Promise.all([
+    const [current, previous, byMethod, trend] = await Promise.all([
       Order.aggregate([
         { $match: paidMatch },
         { $group: { _id: null, gross: { $sum: "$totalAmount" }, count: { $sum: 1 } } },
@@ -55,11 +55,6 @@ export const reportService = {
         { $group: { _id: "$method", amount: { $sum: "$amount" } } },
       ]),
       Order.aggregate([
-        // Always broken down across every branch, regardless of any branchId filter in `range`.
-        { $match: matchStage(tenantId, { dateFrom: range.dateFrom, dateTo: range.dateTo }, { paymentStatus: "PAID" }) },
-        { $group: { _id: "$branchId", amount: { $sum: "$totalAmount" } } },
-      ]),
-      Order.aggregate([
         { $match: paidMatch },
         {
           $group: {
@@ -70,7 +65,6 @@ export const reportService = {
         },
         { $sort: { _id: 1 } },
       ]),
-      branchNameMap(tenantId),
     ]);
 
     const refunds = await Payment.aggregate([
@@ -93,11 +87,6 @@ export const reportService = {
       grossRevenueChangePct: percentChange(gross, prevGross),
       orderCountChangePct: percentChange(orderCount, prevCount),
       revenueByPaymentMethod: byMethod.map((m) => ({ method: m._id ?? "UNKNOWN", amount: m.amount })),
-      revenueByBranch: byBranch.map((b) => ({
-        branchId: b._id,
-        branchName: branchNames.get(b._id?.toString()) ?? "Unknown Branch",
-        amount: b.amount,
-      })),
       trend: trend.map((t) => ({ date: t._id, amount: t.amount, orderCount: t.count })),
     };
   },

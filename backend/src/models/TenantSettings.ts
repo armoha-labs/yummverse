@@ -32,13 +32,12 @@ const tenantSettingsSchema = new Schema(
     },
 
     payment: {
-      // Tenant-wide default for "pay at the counter instead of online" (§23) — a branch can
-      // override this via Branch.settings.payment.allowPayLater.
+      // "Pay at the counter instead of online" (§23).
       allowPayLater: { type: Boolean, default: false },
       // Off by default: the "Card (POS terminal)" collection method is currently a manual
       // staff-confirmed bookkeeping entry, not a real card-present integration (no terminal
       // SDK wired up yet) — a tenant enables this explicitly once that hardware/SDK is in
-      // place. A branch can override via Branch.settings.payment.posCardEnabled.
+      // place.
       posCardEnabled: { type: Boolean, default: false },
     },
 

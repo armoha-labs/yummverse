@@ -27,46 +27,6 @@ const branchSchema = new Schema(
 
     timezone: { type: String },
 
-    // No defaults here, deliberately: absent means "inherit the tenant default" (§6A.2),
-    // which is a different thing from an override that explicitly disables tax/service charge.
-    settings: {
-      type: {
-        tax: {
-          type: { enabled: { type: Boolean, required: true }, percentage: { type: Number, required: true } },
-          required: false,
-          _id: false,
-        },
-        serviceCharge: {
-          type: { enabled: { type: Boolean, required: true }, percentage: { type: Number, required: true } },
-          required: false,
-          _id: false,
-        },
-        // Absent means "inherit the tenant default", same rule as tax/serviceCharge above.
-        // Each field is independently optional (not required together) — a branch can
-        // override just one of allowPayLater/posCardEnabled without having to also restate
-        // the other, which would otherwise silently pin it away from the tenant default.
-        payment: {
-          type: {
-            allowPayLater: { type: Boolean, required: false },
-            posCardEnabled: { type: Boolean, required: false },
-          },
-          required: false,
-          _id: false,
-        },
-        // Same independently-optional-fields rule as payment above.
-        ordering: {
-          type: {
-            kitchenEnabled: { type: Boolean, required: false },
-            tableStatusEnabled: { type: Boolean, required: false },
-          },
-          required: false,
-          _id: false,
-        },
-      },
-      required: false,
-      _id: false,
-    },
-
     status: { type: String, enum: BRANCH_STATUSES, default: "ACTIVE", required: true },
   },
   { timestamps: true },

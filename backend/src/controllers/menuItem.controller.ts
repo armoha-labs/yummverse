@@ -12,7 +12,6 @@ import {
   setAvailabilitySchema,
   reorderSchema,
   listMenuItemsQuerySchema,
-  branchIdParamSchema,
   menuExportQuerySchema,
 } from "../validators/menu.validators.js";
 
@@ -91,22 +90,6 @@ export const reorderMenuItems = asyncHandler(async (req: Request, res: Response)
   const { orderedIds } = reorderSchema.parse(req.body);
   await menuItemService.reorder(tenantId, orderedIds);
   sendSuccess(res, { message: "Reordered." });
-});
-
-export const getBranchOverrides = asyncHandler(async (req: Request, res: Response) => {
-  const { tenantId } = requireTenantContext(req);
-  const { id } = idParamSchema.parse(req.params);
-  const overrides = await menuItemService.getBranchOverrides(tenantId, id);
-  sendSuccess(res, overrides);
-});
-
-export const setBranchOverride = asyncHandler(async (req: Request, res: Response) => {
-  const { tenantId } = requireTenantContext(req);
-  const { id } = idParamSchema.parse(req.params);
-  const { branchId } = branchIdParamSchema.parse(req.params);
-  const { isAvailable } = setAvailabilitySchema.parse(req.body);
-  const override = await menuItemService.setBranchOverride(tenantId, id, branchId, isAvailable);
-  sendSuccess(res, override);
 });
 
 export const exportMenu = asyncHandler(async (req: Request, res: Response) => {

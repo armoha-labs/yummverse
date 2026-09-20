@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Plus } from "lucide-react";
 import { api, ApiError } from "@/lib/apiClient";
 import { validateImageFile } from "@/lib/imageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Profile {
@@ -40,6 +46,7 @@ export default function SettingsPage() {
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="operations">Operations</TabsTrigger>
+          <TabsTrigger value="staff">Staff</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="mt-5">
@@ -47,6 +54,9 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value="operations" className="mt-5">
           <OperationsTab />
+        </TabsContent>
+        <TabsContent value="staff" className="mt-5">
+          <StaffTab />
         </TabsContent>
         <TabsContent value="branding" className="mt-5">
           <BrandingTab />
@@ -182,8 +192,7 @@ function OperationsTab() {
       <div className="-mt-2 pl-0 text-xs text-text-muted">
         Off by default — there's no card-terminal SDK wired up yet, so "Card (POS terminal)" at
         checkout is only a manual staff-confirmed entry, not a real card-present transaction.
-        Turn this on once your café actually has that hardware/SDK installed. Both settings are
-        defaults for new branches; each branch can override them under Branches.
+        Turn this on once your café actually has that hardware/SDK installed.
       </div>
     </div>
   );
@@ -211,6 +220,136 @@ function PercentageInput({ value, onSave }: { value: number; onSave: (v: number)
         onBlur={() => onSave(Number(local))}
       />
       <span className="text-sm text-text-muted">%</span>
+    </div>
+  );
+}
+
+interface StaffMember {
+  _id: string;
+  name: string;
+  email: string;
+  role: "WAITER" | "KITCHEN";
+  active: boolean;
+}
+
+const staffSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  phone: z.string().optional(),
+  role: z.enum(["WAITER", "KITCHEN"]),
+});
+type StaffFormValues = z.infer<typeof staffSchema>;
+
+function StaffTab() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [roleFilter, setRoleFilter] = useState<string>("");
+
+  const staff = useQuery({
+    queryKey: ["staff", roleFilter],
+    queryFn: () => api.get<StaffMember[]>(`/admin/users${roleFilter ? `?role=${roleFilter}` : ""}`),
+  });
+
+  const form = useForm<StaffFormValues>({ resolver: zodResolver(staffSchema), defaultValues: { role: "WAITER" } });
+
+  const create = useMutation({
+    mutationFn: (data: StaffFormValues) => api.post("/admin/users", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
+      form.reset({ role: "WAITER" });
+      setOpen(false);
+    },
+  });
+
+  const setActive = useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      api.post(`/admin/users/${id}/${active ? "activate" : "deactivate"}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["staff"] }),
+  });
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Select value={roleFilter || "ALL"} onValueChange={(v) => setRoleFilter(v === "ALL" ? "" : v)}>
+          <SelectTrigger className="w-36">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All</SelectItem>
+            <SelectItem value="WAITER">Waiter</SelectItem>
+            <SelectItem value="KITCHEN">Kitchen</SelectItem>
+          </SelectContent>
+        </Select>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm">
+              <Plus size={15} /> Add Staff
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Staff</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={form.handleSubmit((data) => create.mutate(data))} className="flex flex-col gap-3.5">
+              <div className="flex flex-col gap-1.5">
+                <Label>Name</Label>
+                <Input {...form.register("name")} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Email</Label>
+                <Input type="email" {...form.register("email")} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Phone</Label>
+                <Input {...form.register("phone")} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Role</Label>
+                <Select defaultValue="WAITER" onValueChange={(v) => form.setValue("role", v as "WAITER" | "KITCHEN")}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="WAITER">Waiter</SelectItem>
+                    <SelectItem value="KITCHEN">Kitchen</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={create.isPending}>
+                  Send Invite
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
+        <div className="overflow-x-auto">
+          <div className="min-w-[620px]">
+            <div className="grid grid-cols-[1fr_80px_1fr_90px_100px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+              <div>Name</div>
+              <div>Role</div>
+              <div>Email</div>
+              <div>Status</div>
+              <div />
+            </div>
+            {staff.data?.map((member) => (
+              <div key={member._id} className="grid grid-cols-[1fr_80px_1fr_90px_100px] items-center gap-2 border-t border-border px-5 py-3 text-sm">
+                <div className="font-medium">{member.name}</div>
+                <div className="text-text-muted">{member.role}</div>
+                <div className="truncate text-text-muted">{member.email}</div>
+                <Badge variant={member.active ? "success" : "outline"}>{member.active ? "Active" : "Inactive"}</Badge>
+                <Button size="sm" variant="ghost" onClick={() => setActive.mutate({ id: member._id, active: !member.active })}>
+                  {member.active ? "Deactivate" : "Activate"}
+                </Button>
+              </div>
+            ))}
+            {staff.data?.length === 0 && <div className="px-5 py-8 text-center text-sm text-text-muted">No staff yet.</div>}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

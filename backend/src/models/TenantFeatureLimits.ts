@@ -5,7 +5,6 @@ const tenantFeatureLimitsSchema = new Schema(
     tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", required: true, unique: true },
 
     overrides: {
-      maxBranches: { type: Number },
       maxTables: { type: Number },
       maxStaffUsers: { type: Number },
       maxOrdersPerMonth: { type: Number },

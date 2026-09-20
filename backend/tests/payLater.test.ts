@@ -54,19 +54,19 @@ async function startCustomerSession(app: ReturnType<typeof createApp>, qrToken: 
 }
 
 describe("pay-later ordering (§23)", () => {
-  it("QR context reports allowPayLater; toggling the branch setting flips it", async () => {
-    const { app, accessToken, defaultBranch } = await createActivatedTenantAdmin("pay-later-flag");
+  it("QR context reports allowPayLater; toggling the tenant setting flips it", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("pay-later-flag");
     const { qrToken } = await setUpMenuAndTable(app, accessToken);
 
     const before = await request(app).get(`/api/v1/public/tables/${qrToken}`);
     expect(before.body.data.branch.allowPayLater).toBe(false);
 
     const updated = await request(app)
-      .put(`/api/v1/admin/branches/${defaultBranch._id.toString()}`)
+      .put("/api/v1/tenant/settings")
       .set("Authorization", `Bearer ${accessToken}`)
-      .send({ settings: { payment: { allowPayLater: true } } });
+      .send({ payment: { allowPayLater: true } });
     expect(updated.status).toBe(200);
-    expect(updated.body.data.settings.payment.allowPayLater).toBe(true);
+    expect(updated.body.data.payment.allowPayLater).toBe(true);
 
     const after = await request(app).get(`/api/v1/public/tables/${qrToken}`);
     expect(after.body.data.branch.allowPayLater).toBe(true);
@@ -86,13 +86,13 @@ describe("pay-later ordering (§23)", () => {
   });
 
   it("a pay-later order skips straight to the kitchen queue, unpaid, and staff can collect payment afterward without losing kitchen progress", async () => {
-    const { app, accessToken, defaultBranch } = await createActivatedTenantAdmin("pay-later-ok");
+    const { app, accessToken } = await createActivatedTenantAdmin("pay-later-ok");
     const { itemId, qrToken } = await setUpMenuAndTable(app, accessToken);
 
     await request(app)
-      .put(`/api/v1/admin/branches/${defaultBranch._id.toString()}`)
+      .put("/api/v1/tenant/settings")
       .set("Authorization", `Bearer ${accessToken}`)
-      .send({ settings: { payment: { allowPayLater: true } } });
+      .send({ payment: { allowPayLater: true } });
 
     const sessionToken = await startCustomerSession(app, qrToken);
     const order = await request(app)

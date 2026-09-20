@@ -65,7 +65,6 @@ function renewalNotice(tenant: Tenant): { level: "overdue" | "due_soon"; days: n
 }
 
 interface PlanLimits {
-  maxBranches: number;
   maxTables: number;
   maxStaffUsers: number;
   maxOrdersPerMonth: number;
@@ -87,7 +86,6 @@ interface LimitsResponse {
 }
 
 const FIELDS: { key: keyof PlanLimits; label: string; type: "number" | "boolean" }[] = [
-  { key: "maxBranches", label: "Max Branches", type: "number" },
   { key: "maxTables", label: "Max Tables", type: "number" },
   { key: "maxStaffUsers", label: "Max Staff Users", type: "number" },
   { key: "maxOrdersPerMonth", label: "Max Orders / Month", type: "number" },

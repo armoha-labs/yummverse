@@ -92,12 +92,12 @@ describe("customer ordering", () => {
     expect(order.body.data.totalAmount).toBe(150);
   });
 
-  it("applies service charge on top of subtotal+tax when enabled at the branch level", async () => {
-    const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("order-c");
+  it("applies service charge on top of subtotal+tax when enabled at the tenant level", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("order-c");
     await request(app)
-      .put(`/api/v1/admin/branches/${defaultBranch._id.toString()}`)
+      .put("/api/v1/tenant/settings")
       .set("Authorization", `Bearer ${accessToken}`)
-      .send({ settings: { serviceCharge: { enabled: true, percentage: 10 } } });
+      .send({ serviceCharge: { enabled: true, percentage: 10 } });
 
     const { item, sessionToken } = await setUpMenuAndSession(app, accessToken);
     const order = await request(app)

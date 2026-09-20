@@ -105,7 +105,7 @@ export const posService = {
     if (method === "POS_CARD" && !(await resolvePosCardEnabled(actor.tenantId, branchId))) {
       throw ApiError.badRequest(
         "POS_CARD_DISABLED",
-        "Card payment via POS terminal isn't enabled for this branch yet.",
+        "Card payment via POS terminal isn't enabled for this café yet.",
       );
     }
 

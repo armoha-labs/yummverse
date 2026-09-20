@@ -16,7 +16,6 @@ export const PLAN_PRICING: Record<PlanId, number> = {
 export const UNLIMITED = 1_000_000_000;
 
 export interface PlanLimits {
-  maxBranches: number;
   maxTables: number;
   maxStaffUsers: number;
   maxOrdersPerMonth: number;
@@ -31,11 +30,10 @@ export interface PlanLimits {
   zomatoIntegrationEnabled: boolean;
 }
 
-// §47's concrete example (branch count) plus sane defaults for the rest — Platform Admin
-// can override any of these per tenant (§7A) without changing the tenant's plan.
+// §47's per-plan defaults — Platform Admin can override any of these per tenant (§7A)
+// without changing the tenant's plan.
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
   FREE: {
-    maxBranches: 1,
     maxTables: 10,
     maxStaffUsers: 5,
     maxOrdersPerMonth: 500,
@@ -50,7 +48,6 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     zomatoIntegrationEnabled: false,
   },
   STARTER: {
-    maxBranches: 1,
     maxTables: 25,
     maxStaffUsers: 15,
     maxOrdersPerMonth: 2000,
@@ -65,7 +62,6 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     zomatoIntegrationEnabled: false,
   },
   PRO: {
-    maxBranches: 5,
     maxTables: 100,
     maxStaffUsers: 50,
     maxOrdersPerMonth: 20000,
@@ -80,7 +76,6 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     zomatoIntegrationEnabled: true,
   },
   ENTERPRISE: {
-    maxBranches: UNLIMITED,
     maxTables: UNLIMITED,
     maxStaffUsers: UNLIMITED,
     maxOrdersPerMonth: UNLIMITED,
@@ -99,7 +94,6 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
 // Platform-wide hard default — the last-resort safety ceiling in §7A.2's resolution chain,
 // used only for a plan/field this map doesn't otherwise bound.
 export const HARD_CEILING: PlanLimits = {
-  maxBranches: 20,
   maxTables: 200,
   maxStaffUsers: 100,
   maxOrdersPerMonth: 100000,

@@ -1,7 +1,5 @@
 import { menuItemRepository } from "../repositories/menuItem.repository.js";
 import { categoryRepository } from "../repositories/category.repository.js";
-import { branchRepository } from "../repositories/branch.repository.js";
-import { branchMenuOverrideRepository } from "../repositories/branchMenuOverride.repository.js";
 import { auditService, type AuditContext } from "./audit.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { realtimeEvents } from "../sockets/realtimeEvents.js";
@@ -218,24 +216,5 @@ export const menuItemService = {
 
   reorder(tenantId: string, orderedIds: string[]) {
     return menuItemRepository.reorder(tenantId, orderedIds);
-  },
-
-  async getBranchOverrides(tenantId: string, menuItemId: string) {
-    const item = await menuItemRepository.findById(tenantId, menuItemId);
-    if (!item) throw ApiError.notFound("MENU_ITEM_NOT_FOUND", "Menu item not found.");
-    return branchMenuOverrideRepository.listForMenuItem(tenantId, menuItemId);
-  },
-
-  async setBranchOverride(tenantId: string, menuItemId: string, branchId: string, isAvailable: boolean) {
-    const [item, branch] = await Promise.all([
-      menuItemRepository.findById(tenantId, menuItemId),
-      branchRepository.findById(tenantId, branchId),
-    ]);
-    if (!item) throw ApiError.notFound("MENU_ITEM_NOT_FOUND", "Menu item not found.");
-    if (!branch) throw ApiError.notFound("BRANCH_NOT_FOUND", "Branch not found.");
-
-    const override = await branchMenuOverrideRepository.upsert(tenantId, branchId, menuItemId, isAvailable);
-    realtimeEvents.menuAvailabilityChanged(tenantId, { menuItemId, branchId, isAvailable });
-    return override;
   },
 };

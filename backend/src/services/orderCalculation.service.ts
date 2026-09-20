@@ -1,7 +1,5 @@
-import { branchRepository } from "../repositories/branch.repository.js";
 import { tenantSettingsService } from "./tenantSettings.service.js";
 import { menuItemRepository } from "../repositories/menuItem.repository.js";
-import { branchMenuOverrideRepository } from "../repositories/branchMenuOverride.repository.js";
 import { ApiError } from "../utils/ApiError.js";
 
 interface RateSetting {
@@ -27,22 +25,11 @@ export interface RequestedOrderItem {
   note?: string;
 }
 
-async function resolveEffectiveAvailability(
-  tenantId: string,
-  branchId: string,
-  menuItemId: string,
-  fallback: boolean,
-): Promise<boolean> {
-  const overrides = await branchMenuOverrideRepository.listForMenuItem(tenantId, menuItemId);
-  const branchOverride = overrides.find((o) => o.branchId.toString() === branchId);
-  return branchOverride ? branchOverride.isAvailable : fallback;
-}
-
 /** Shared by QR (§23) and POS (§23A) order creation — same menu, same availability rules,
  * same historical price/name snapshot (§24), just a different order channel. */
 export async function resolveOrderLines(
   tenantId: string,
-  branchId: string,
+  _branchId: string,
   items: RequestedOrderItem[],
 ): Promise<ResolvedOrderLine[]> {
   if (items.length === 0) {
@@ -56,13 +43,7 @@ export async function resolveOrderLines(
       throw ApiError.badRequest("MENU_ITEM_UNAVAILABLE", `Item not found: ${requested.menuItemId}`);
     }
 
-    const available = await resolveEffectiveAvailability(
-      tenantId,
-      branchId,
-      requested.menuItemId,
-      menuItem.isAvailable,
-    );
-    if (!available) {
+    if (!menuItem.isAvailable) {
       throw ApiError.badRequest("MENU_ITEM_UNAVAILABLE", `"${menuItem.name}" is currently unavailable.`);
     }
 
@@ -89,61 +70,42 @@ export interface OrderTotals {
   totalAmount: number;
 }
 
-/** Branch settings override the tenant default; an unset branch field inherits it (§6A.2). */
+/** `branchId` is accepted for call-site compatibility (every tenant is exactly one café/
+ * branch now — there's no longer a second branch whose settings could differ) but is no
+ * longer consulted; every setting lives solely on the tenant. */
 export async function resolveEffectiveRates(
   tenantId: string,
-  branchId: string,
+  _branchId: string,
 ): Promise<{ tax: RateSetting; serviceCharge: RateSetting }> {
-  const [branch, tenantSettings] = await Promise.all([
-    branchRepository.findById(tenantId, branchId),
-    tenantSettingsService.getOrCreate(tenantId),
-  ]);
-
+  const tenantSettings = await tenantSettingsService.getOrCreate(tenantId);
   return {
-    tax: branch?.settings?.tax ?? tenantSettings.tax ?? { enabled: false, percentage: 0 },
-    serviceCharge:
-      branch?.settings?.serviceCharge ?? tenantSettings.serviceCharge ?? { enabled: false, percentage: 0 },
+    tax: tenantSettings.tax ?? { enabled: false, percentage: 0 },
+    serviceCharge: tenantSettings.serviceCharge ?? { enabled: false, percentage: 0 },
   };
 }
 
-/** Branch setting overrides the tenant default, same inheritance rule as tax/serviceCharge
- * above (§6A.2) — lets a café accept orders into the kitchen before payment and collect it
- * later (§23), per branch. */
-export async function resolveAllowPayLater(tenantId: string, branchId: string): Promise<boolean> {
-  const [branch, tenantSettings] = await Promise.all([
-    branchRepository.findById(tenantId, branchId),
-    tenantSettingsService.getOrCreate(tenantId),
-  ]);
-  return branch?.settings?.payment?.allowPayLater ?? tenantSettings.payment?.allowPayLater ?? false;
+/** Lets a café accept orders into the kitchen before payment and collect it later (§23). */
+export async function resolveAllowPayLater(tenantId: string, _branchId: string): Promise<boolean> {
+  const tenantSettings = await tenantSettingsService.getOrCreate(tenantId);
+  return tenantSettings.payment?.allowPayLater ?? false;
 }
 
-/** Same branch-overrides-tenant inheritance rule as above. Off by default everywhere — the
- * "Card (POS terminal)" collection method has no real card-present hardware/SDK wired up yet
- * (§23A.3), so a tenant switches this on only once that's actually in place. */
-export async function resolvePosCardEnabled(tenantId: string, branchId: string): Promise<boolean> {
-  const [branch, tenantSettings] = await Promise.all([
-    branchRepository.findById(tenantId, branchId),
-    tenantSettingsService.getOrCreate(tenantId),
-  ]);
-  return branch?.settings?.payment?.posCardEnabled ?? tenantSettings.payment?.posCardEnabled ?? false;
+/** Off by default everywhere — the "Card (POS terminal)" collection method has no real
+ * card-present hardware/SDK wired up yet (§23A.3), so a tenant switches this on only once
+ * that's actually in place. */
+export async function resolvePosCardEnabled(tenantId: string, _branchId: string): Promise<boolean> {
+  const tenantSettings = await tenantSettingsService.getOrCreate(tenantId);
+  return tenantSettings.payment?.posCardEnabled ?? false;
 }
 
-/** Same branch-overrides-tenant inheritance rule as above. */
-export async function resolveKitchenEnabled(tenantId: string, branchId: string): Promise<boolean> {
-  const [branch, tenantSettings] = await Promise.all([
-    branchRepository.findById(tenantId, branchId),
-    tenantSettingsService.getOrCreate(tenantId),
-  ]);
-  return branch?.settings?.ordering?.kitchenEnabled ?? tenantSettings.ordering?.kitchenEnabled ?? true;
+export async function resolveKitchenEnabled(tenantId: string, _branchId: string): Promise<boolean> {
+  const tenantSettings = await tenantSettingsService.getOrCreate(tenantId);
+  return tenantSettings.ordering?.kitchenEnabled ?? true;
 }
 
-/** Same branch-overrides-tenant inheritance rule as above. */
-export async function resolveTableStatusEnabled(tenantId: string, branchId: string): Promise<boolean> {
-  const [branch, tenantSettings] = await Promise.all([
-    branchRepository.findById(tenantId, branchId),
-    tenantSettingsService.getOrCreate(tenantId),
-  ]);
-  return branch?.settings?.ordering?.tableStatusEnabled ?? tenantSettings.ordering?.tableStatusEnabled ?? true;
+export async function resolveTableStatusEnabled(tenantId: string, _branchId: string): Promise<boolean> {
+  const tenantSettings = await tenantSettingsService.getOrCreate(tenantId);
+  return tenantSettings.ordering?.tableStatusEnabled ?? true;
 }
 
 function round2(value: number): number {

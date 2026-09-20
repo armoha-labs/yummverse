@@ -35,7 +35,6 @@ export const updateSubscriptionSchema = z.object({
 
 const limitOverridesSchema = z
   .object({
-    maxBranches: z.number().min(0).optional(),
     maxTables: z.number().min(0).optional(),
     maxStaffUsers: z.number().min(0).optional(),
     maxOrdersPerMonth: z.number().min(0).optional(),

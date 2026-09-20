@@ -21,5 +21,3 @@ menuItemRouter.delete("/:id", menuItemController.deleteMenuItem);
 menuItemRouter.post("/:id/image", imageUpload.single("file"), menuItemController.uploadMenuItemImage);
 menuItemRouter.delete("/:id/image", menuItemController.deleteMenuItemImage);
 menuItemRouter.patch("/:id/availability", menuItemController.setMenuItemAvailability);
-menuItemRouter.get("/:id/branch-overrides", menuItemController.getBranchOverrides);
-menuItemRouter.put("/:id/branch-overrides/:branchId", menuItemController.setBranchOverride);

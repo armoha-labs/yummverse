@@ -141,11 +141,7 @@ export default function QRLandingPage() {
         style={{ animation: "fadeInUp 0.5s ease-out" }}
       >
         <div className="font-display text-xl font-extrabold">{context?.tenant.name ?? "Finding your table…"}</div>
-        {context && (
-          <div className="mt-1.5 text-[13.5px] opacity-90">
-            Table {context.table.tableNumber} &middot; {context.branch.name}
-          </div>
-        )}
+        {context && <div className="mt-1.5 text-[13.5px] opacity-90">Table {context.table.tableNumber}</div>}
       </div>
 
       <div className="flex items-center gap-2.5 rounded-full bg-white px-[18px] py-[10px] shadow-[0_4px_14px_oklch(20%_0_0_/_0.08)]">

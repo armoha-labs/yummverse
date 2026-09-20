@@ -38,14 +38,13 @@ async function createStaffAndLogin(
   app: ReturnType<typeof createApp>,
   slug: string,
   adminToken: string,
-  branchId: string,
   role: "WAITER" | "KITCHEN",
   email: string,
 ) {
   const created = await request(app)
     .post("/api/v1/admin/users")
     .set("Authorization", `Bearer ${adminToken}`)
-    .send({ name: role, email, role, branchId });
+    .send({ name: role, email, role });
 
   const inviteToken = `token-${email}`;
   await User.updateOne(
@@ -97,7 +96,6 @@ describe("kitchen order lifecycle", () => {
       app,
       "kw-a",
       accessToken,
-      defaultBranch._id.toString(),
       "KITCHEN",
       "kitchen@kw-a.test",
     );
@@ -133,7 +131,6 @@ describe("kitchen order lifecycle", () => {
       app,
       "kw-g",
       accessToken,
-      defaultBranch._id.toString(),
       "KITCHEN",
       "kitchen@kw-g.test",
     );
@@ -141,34 +138,6 @@ describe("kitchen order lifecycle", () => {
     const queue = await request(app).get("/api/v1/kitchen/orders").set("Authorization", `Bearer ${kitchenToken}`);
     const order = queue.body.data.find((o: { _id: string }) => o._id === orderId);
     expect(order.tableId.tableNumber).toBe(table.body.data.tableNumber);
-  });
-
-  it("a kitchen user cannot see or act on another branch's orders (§6A.5)", async () => {
-    const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("kw-b");
-    const { orderId } = await setUpNewOrder(app, accessToken, defaultBranch._id.toString());
-
-    const secondBranch = await request(app)
-      .post("/api/v1/admin/branches")
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ name: "Second", slug: "second" });
-    const otherKitchenToken = await createStaffAndLogin(
-      app,
-      "kw-b",
-      accessToken,
-      secondBranch.body.data._id,
-      "KITCHEN",
-      "otherkitchen@kw-b.test",
-    );
-
-    const queue = await request(app)
-      .get("/api/v1/kitchen/orders")
-      .set("Authorization", `Bearer ${otherKitchenToken}`);
-    expect(queue.body.data.map((o: { _id: string }) => o._id)).not.toContain(orderId);
-
-    const blockedAccept = await request(app)
-      .post(`/api/v1/kitchen/orders/${orderId}/accept`)
-      .set("Authorization", `Bearer ${otherKitchenToken}`);
-    expect(blockedAccept.status).toBe(404);
   });
 
   it("tenant admin has read + action parity across all branches via /admin/kitchen", async () => {
@@ -196,7 +165,6 @@ describe("waiter workflow", () => {
       app,
       "kw-d",
       accessToken,
-      defaultBranch._id.toString(),
       "KITCHEN",
       "kitchen@kw-d.test",
     );
@@ -208,7 +176,6 @@ describe("waiter workflow", () => {
       app,
       "kw-d",
       accessToken,
-      defaultBranch._id.toString(),
       "WAITER",
       "waiter@kw-d.test",
     );
@@ -246,7 +213,6 @@ describe("waiter workflow", () => {
       app,
       "kw-h",
       accessToken,
-      defaultBranch._id.toString(),
       "KITCHEN",
       "kitchen@kw-h.test",
     );
@@ -254,7 +220,6 @@ describe("waiter workflow", () => {
       app,
       "kw-h",
       accessToken,
-      defaultBranch._id.toString(),
       "WAITER",
       "waiter@kw-h.test",
     );
@@ -276,12 +241,11 @@ describe("waiter workflow", () => {
     expect(served.body.data.readyAt).toBeFalsy();
   });
 
-  it("the QR/waiter/kitchen lookups report kitchenEnabled, and a branch override beats the tenant default", async () => {
-    const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("kw-i");
+  it("the QR/waiter/kitchen lookups report kitchenEnabled from the tenant setting", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("kw-i");
     const { table } = await setUpNewOrder(app, accessToken);
-    const branchId = defaultBranch._id.toString();
-    const waiterToken = await createStaffAndLogin(app, "kw-i", accessToken, branchId, "WAITER", "waiter@kw-i.test");
-    const kitchenToken = await createStaffAndLogin(app, "kw-i", accessToken, branchId, "KITCHEN", "kitchen@kw-i.test");
+    const waiterToken = await createStaffAndLogin(app, "kw-i", accessToken, "WAITER", "waiter@kw-i.test");
+    const kitchenToken = await createStaffAndLogin(app, "kw-i", accessToken, "KITCHEN", "kitchen@kw-i.test");
 
     const qrBefore = await request(app).get(`/api/v1/public/tables/${table.body.data.qrToken}`);
     expect(qrBefore.body.data.branch.kitchenEnabled).toBe(true);
@@ -301,41 +265,6 @@ describe("waiter workflow", () => {
     expect(waiterAfter.body.data.kitchenEnabled).toBe(false);
     const kitchenAfter = await request(app).get("/api/v1/kitchen/settings").set("Authorization", `Bearer ${kitchenToken}`);
     expect(kitchenAfter.body.data.kitchenEnabled).toBe(false);
-
-    // A branch-level override re-enables it for this branch only, beating the tenant-wide default.
-    await request(app)
-      .put(`/api/v1/admin/branches/${branchId}`)
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ settings: { ordering: { kitchenEnabled: true } } });
-
-    const qrOverride = await request(app).get(`/api/v1/public/tables/${table.body.data.qrToken}`);
-    expect(qrOverride.body.data.branch.kitchenEnabled).toBe(true);
-    const waiterOverride = await request(app).get("/api/v1/waiter/settings").set("Authorization", `Bearer ${waiterToken}`);
-    expect(waiterOverride.body.data.kitchenEnabled).toBe(true);
-    const kitchenOverride = await request(app).get("/api/v1/kitchen/settings").set("Authorization", `Bearer ${kitchenToken}`);
-    expect(kitchenOverride.body.data.kitchenEnabled).toBe(true);
-  });
-
-  it("setting kitchenEnabled on a branch doesn't reset an already-set tableStatusEnabled override (and vice versa)", async () => {
-    const { app, defaultBranch, accessToken } = await createActivatedTenantAdmin("kw-j");
-    const branchId = defaultBranch._id.toString();
-
-    await request(app)
-      .put(`/api/v1/admin/branches/${branchId}`)
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ settings: { ordering: { tableStatusEnabled: false } } });
-
-    // Setting ONLY kitchenEnabled afterward must not silently reintroduce a tableStatusEnabled
-    // override that was never asked for.
-    await request(app)
-      .put(`/api/v1/admin/branches/${branchId}`)
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({ settings: { ordering: { kitchenEnabled: false } } });
-
-    const branches = await request(app).get("/api/v1/admin/branches").set("Authorization", `Bearer ${accessToken}`);
-    const branch = branches.body.data.find((b: { _id: string }) => b._id === branchId);
-    expect(branch.settings.ordering.tableStatusEnabled).toBe(false);
-    expect(branch.settings.ordering.kitchenEnabled).toBe(false);
   });
 
   it("waiter cannot create or modify a QR customer's order directly (no such endpoint is exposed)", async () => {
@@ -344,7 +273,6 @@ describe("waiter workflow", () => {
       app,
       "kw-e",
       accessToken,
-      defaultBranch._id.toString(),
       "WAITER",
       "waiter@kw-e.test",
     );

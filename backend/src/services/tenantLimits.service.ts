@@ -31,11 +31,6 @@ export const tenantLimitsService = {
     return merged;
   },
 
-  async resolveMaxBranches(tenantId: string): Promise<number> {
-    const limits = await this.resolveEffectiveLimits(tenantId);
-    return limits.maxBranches;
-  },
-
   async getRaw(tenantId: string) {
     const [tenant, featureLimits] = await Promise.all([
       tenantRepository.findById(tenantId),

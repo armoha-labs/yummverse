@@ -6,33 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Receipt } from "@/components/Receipt";
-import { printReceipt as printReceiptPage } from "@/lib/printReceipt";
-import { useTenantBranding } from "@/lib/useTenantBranding";
+import { usePrintReceipt } from "@/lib/usePrintReceipt";
 import { useTenantSettings } from "@/lib/useTenantSettings";
 import { orderStatusLabel } from "@/lib/orderStatus";
 
 interface OrderRow {
   _id: string;
-  branchId: string;
   orderNumber: number;
   channel: "QR" | "POS";
   items: { name: string; quantity: number }[];
   totalAmount: number;
   orderStatus: string;
-  paymentStatus: string;
-  createdAt: string;
-}
-
-interface OrderDetail {
-  orderNumber: number;
-  channel: "QR" | "POS";
-  items: { name: string; quantity: number; total: number; note?: string }[];
-  taxAmount: number;
-  cgstAmount: number;
-  sgstAmount: number;
-  serviceCharge: number;
-  totalAmount: number;
   paymentStatus: string;
   createdAt: string;
 }
@@ -82,9 +66,8 @@ function currency(n: number): string {
 export default function OrdersPage() {
   const [status, setStatus] = useState<string>("");
   const [collecting, setCollecting] = useState<OrderRow | null>(null);
-  const [printing, setPrinting] = useState<OrderDetail | null>(null);
   const queryClient = useQueryClient();
-  const branding = useTenantBranding();
+  const { printOrder, isPrinting } = usePrintReceipt();
   const settings = useTenantSettings();
   const kitchenEnabled = settings.data?.ordering.kitchenEnabled ?? true;
 
@@ -103,14 +86,6 @@ export default function OrdersPage() {
   const markServed = useMutation({
     mutationFn: (id: string) => api.post(`/admin/kitchen/orders/${id}/served`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
-  });
-
-  const printReceipt = useMutation({
-    mutationFn: (id: string) => api.get<OrderDetail>(`/admin/orders/${id}`),
-    onSuccess: (order) => {
-      setPrinting(order);
-      setTimeout(() => printReceiptPage(), 50);
-    },
   });
 
   return (
@@ -192,8 +167,8 @@ export default function OrdersPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    disabled={printReceipt.isPending}
-                    onClick={() => printReceipt.mutate(order._id)}
+                    disabled={isPrinting}
+                    onClick={() => printOrder(order._id)}
                     title="Print receipt"
                   >
                     <Printer size={14} strokeWidth={2} />
@@ -206,26 +181,6 @@ export default function OrdersPage() {
       </div>
 
       <CollectPaymentDialog order={collecting} onClose={() => setCollecting(null)} />
-
-      {printing && (
-        <Receipt
-          visible={false}
-          data={{
-            tenantName: branding.data?.name ?? "",
-            logoUrl: branding.data?.branding?.logoUrl,
-            orderNumber: printing.orderNumber,
-            createdAt: printing.createdAt,
-            subtitle: printing.channel === "QR" ? "QR Order" : "POS",
-            items: printing.items,
-            taxAmount: printing.taxAmount,
-            cgstAmount: printing.cgstAmount,
-            sgstAmount: printing.sgstAmount,
-            serviceCharge: printing.serviceCharge,
-            totalAmount: printing.totalAmount,
-            paid: printing.paymentStatus === "PAID",
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -236,12 +191,12 @@ function CollectPaymentDialog({ order, onClose }: { order: OrderRow | null; onCl
   const [error, setError] = useState<string | null>(null);
 
   const posSettings = useQuery({
-    queryKey: ["pos-settings", order?.branchId],
-    queryFn: () => api.get<{ posCardEnabled: boolean }>(`/pos/settings?branchId=${order!.branchId}`),
+    queryKey: ["pos-settings"],
+    queryFn: () => api.get<{ posCardEnabled: boolean }>("/pos/settings"),
     enabled: Boolean(order),
   });
-  // Card (POS terminal) only shows up once this order's branch actually has it enabled
-  // (Settings → Operations, or a per-branch override) — see PosOrderPage.tsx for why.
+  // Card (POS terminal) only shows up once the café has actually enabled it (Settings →
+  // Operations) — see PosOrderPage.tsx for why.
   const paymentMethods = (["CASH", "POS_CARD"] as const).filter(
     (m) => m !== "POS_CARD" || posSettings.data?.posCardEnabled,
   );
