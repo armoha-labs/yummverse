@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { api } from "@/lib/apiClient";
+import { api, ApiError } from "@/lib/apiClient";
+import { validateImageFile } from "@/lib/imageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -218,6 +219,7 @@ function BrandingTab() {
   const queryClient = useQueryClient();
   const branding = useQuery({ queryKey: ["tenant-branding-edit"], queryFn: () => api.get<Branding>("/tenant/branding") });
   const fileRef = useRef<HTMLInputElement>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
 
   const [primaryColor, setPrimaryColor] = useState("");
   const [secondaryColor, setSecondaryColor] = useState("");
@@ -243,10 +245,22 @@ function BrandingTab() {
       return api.postForm("/tenant/branding/logo", formData);
     },
     onSuccess: () => {
+      setLogoError(null);
       queryClient.invalidateQueries({ queryKey: ["tenant-branding-edit"] });
       queryClient.invalidateQueries({ queryKey: ["tenant-profile"] });
     },
+    onError: (err) => setLogoError(err instanceof ApiError ? err.message : "Couldn't upload this logo."),
   });
+
+  function onLogoFileChosen(file: File) {
+    const error = validateImageFile(file);
+    if (error) {
+      setLogoError(error);
+      return;
+    }
+    setLogoError(null);
+    uploadLogo.mutate(file);
+  }
 
   return (
     <div className="flex flex-col gap-5 rounded-card border border-border bg-surface p-6 shadow-sm2">
@@ -265,14 +279,16 @@ function BrandingTab() {
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) uploadLogo.mutate(file);
+              if (file) onLogoFileChosen(file);
+              e.target.value = "";
             }}
           />
-          <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-            Upload New Logo
+          <Button type="button" variant="outline" size="sm" disabled={uploadLogo.isPending} onClick={() => fileRef.current?.click()}>
+            {uploadLogo.isPending ? "Uploading…" : "Upload New Logo"}
           </Button>
         </div>
         <div className="text-xs text-text-muted">Recommended: square PNG/SVG, max 1MB</div>
+        {logoError && <div className="text-xs font-medium text-danger">{logoError}</div>}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

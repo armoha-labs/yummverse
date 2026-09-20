@@ -4,7 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowDown, ArrowUp, Download, ImageOff, Pencil, Plus, Upload, X } from "lucide-react";
-import { api, apiFetch } from "@/lib/apiClient";
+import { api, apiFetch, ApiError } from "@/lib/apiClient";
+import { validateImageFile } from "@/lib/imageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -267,6 +268,7 @@ function ItemsTab() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [itemImageError, setItemImageError] = useState<string | null>(null);
   const itemImageFileRef = useRef<HTMLInputElement>(null);
   const categories = useQuery({ queryKey: ["categories"], queryFn: () => api.get<Category[]>("/admin/categories") });
   const items = useQuery({ queryKey: ["menu-items"], queryFn: () => api.get<MenuItem[]>("/admin/menu-items") });
@@ -291,6 +293,7 @@ function ItemsTab() {
         price: editingItem.price,
         taxPercentage: editingItem.taxPercentage,
       });
+      setItemImageError(null);
     }
   }, [editingItem, editForm]);
 
@@ -324,9 +327,11 @@ function ItemsTab() {
       return api.postForm<MenuItem>(`/admin/menu-items/${editingItem!._id}/image`, formData);
     },
     onSuccess: (updated) => {
+      setItemImageError(null);
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       setEditingItem(updated);
     },
+    onError: (err) => setItemImageError(err instanceof ApiError ? err.message : "Couldn't upload this photo."),
   });
 
   const removeItemImage = useMutation({
@@ -336,6 +341,16 @@ function ItemsTab() {
       setEditingItem(updated);
     },
   });
+
+  function onItemImageFileChosen(file: File) {
+    const error = validateImageFile(file);
+    if (error) {
+      setItemImageError(error);
+      return;
+    }
+    setItemImageError(null);
+    uploadItemImage.mutate(file);
+  }
 
   const categoryName = (id: string) => categories.data?.find((c) => c._id === id)?.name ?? "—";
 
@@ -472,7 +487,7 @@ function ItemsTab() {
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) uploadItemImage.mutate(file);
+                    if (file) onItemImageFileChosen(file);
                     e.target.value = "";
                   }}
                 />
@@ -497,6 +512,8 @@ function ItemsTab() {
                   </Button>
                 )}
               </div>
+              <div className="text-xs text-text-muted">Max 1MB — PNG, JPG, SVG, or WEBP.</div>
+              {itemImageError && <div className="text-xs font-medium text-danger">{itemImageError}</div>}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Category</Label>
