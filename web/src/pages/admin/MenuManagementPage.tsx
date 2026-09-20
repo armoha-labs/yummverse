@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowDown, ArrowUp, Download, Pencil, Plus, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, Download, ImageOff, Pencil, Plus, Upload, X } from "lucide-react";
 import { api, apiFetch } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ interface MenuItem {
   categoryId: string;
   name: string;
   description?: string;
+  imageUrl?: string;
   price: number;
   taxPercentage: number;
   isAvailable: boolean;
@@ -266,6 +267,7 @@ function ItemsTab() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const itemImageFileRef = useRef<HTMLInputElement>(null);
   const categories = useQuery({ queryKey: ["categories"], queryFn: () => api.get<Category[]>("/admin/categories") });
   const items = useQuery({ queryKey: ["menu-items"], queryFn: () => api.get<MenuItem[]>("/admin/menu-items") });
   // Tax is charged per menu item's own Tax % (a GST-style per-item slab) — the tenant-wide
@@ -313,6 +315,26 @@ function ItemsTab() {
     mutationFn: ({ id, isAvailable }: { id: string; isAvailable: boolean }) =>
       api.patch(`/admin/menu-items/${id}/availability`, { isAvailable }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["menu-items"] }),
+  });
+
+  const uploadItemImage = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return api.postForm<MenuItem>(`/admin/menu-items/${editingItem!._id}/image`, formData);
+    },
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
+      setEditingItem(updated);
+    },
+  });
+
+  const removeItemImage = useMutation({
+    mutationFn: () => api.delete<MenuItem>(`/admin/menu-items/${editingItem!._id}/image`),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
+      setEditingItem(updated);
+    },
   });
 
   const categoryName = (id: string) => categories.data?.find((c) => c._id === id)?.name ?? "—";
@@ -389,7 +411,8 @@ function ItemsTab() {
       <div className="overflow-hidden rounded-card border border-border bg-surface shadow-sm2">
         <div className="overflow-x-auto">
           <div className="min-w-[580px]">
-            <div className="grid grid-cols-[1fr_130px_90px_90px_50px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+            <div className="grid grid-cols-[44px_1fr_130px_90px_90px_50px] gap-2 px-5 py-2.5 text-[11.5px] font-bold uppercase tracking-wide text-text-muted">
+              <div />
               <div>Name</div>
               <div>Category</div>
               <div>Price</div>
@@ -397,7 +420,14 @@ function ItemsTab() {
               <div />
             </div>
             {items.data?.map((item) => (
-              <div key={item._id} className="grid grid-cols-[1fr_130px_90px_90px_50px] items-center gap-2 border-t border-border px-5 py-3 text-sm">
+              <div key={item._id} className="grid grid-cols-[44px_1fr_130px_90px_90px_50px] items-center gap-2 border-t border-border px-5 py-3 text-sm">
+                {item.imageUrl ? (
+                  <img src={item.imageUrl} alt="" className="h-9 w-9 rounded-[8px] border border-border object-cover" />
+                ) : (
+                  <div className="flex h-9 w-9 items-center justify-center rounded-[8px] border border-dashed border-border text-text-muted">
+                    <ImageOff size={13} />
+                  </div>
+                )}
                 <div className="font-medium">{item.name}</div>
                 <div className="text-text-muted">{categoryName(item.categoryId)}</div>
                 <div>₹{item.price}</div>
@@ -425,6 +455,49 @@ function ItemsTab() {
             <DialogTitle>Edit Item</DialogTitle>
           </DialogHeader>
           <form onSubmit={editForm.handleSubmit((data) => update.mutate(data))} className="flex flex-col gap-3.5">
+            <div className="flex flex-col gap-1.5">
+              <Label>Photo</Label>
+              <div className="flex items-center gap-3">
+                {editingItem?.imageUrl ? (
+                  <img src={editingItem.imageUrl} alt="" className="h-14 w-14 rounded-[10px] border border-border object-cover" />
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-[10px] border border-dashed border-border text-text-muted">
+                    <ImageOff size={18} />
+                  </div>
+                )}
+                <input
+                  ref={itemImageFileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadItemImage.mutate(file);
+                    e.target.value = "";
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploadItemImage.isPending}
+                  onClick={() => itemImageFileRef.current?.click()}
+                >
+                  <Upload size={13} /> {uploadItemImage.isPending ? "Uploading…" : "Upload Photo"}
+                </Button>
+                {editingItem?.imageUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={removeItemImage.isPending}
+                    onClick={() => removeItemImage.mutate()}
+                  >
+                    <X size={13} /> Remove
+                  </Button>
+                )}
+              </div>
+            </div>
             <div className="flex flex-col gap-1.5">
               <Label>Category</Label>
               <Select value={editForm.watch("categoryId")} onValueChange={(v) => editForm.setValue("categoryId", v)}>

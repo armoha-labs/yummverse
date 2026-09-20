@@ -47,6 +47,27 @@ export const updateMenuItem = asyncHandler(async (req: Request, res: Response) =
   sendSuccess(res, item);
 });
 
+export const uploadMenuItemImage = asyncHandler(async (req: Request, res: Response) => {
+  const { tenantId, actorId } = requireTenantContext(req);
+  const { id } = idParamSchema.parse(req.params);
+  if (!req.file) throw ApiError.badRequest("FILE_REQUIRED", "No file uploaded.");
+
+  const item = await menuItemService.uploadImage(
+    tenantId,
+    id,
+    { buffer: req.file.buffer, mimeType: req.file.mimetype, originalName: req.file.originalname },
+    { actorId, ...actorMeta(req) },
+  );
+  sendSuccess(res, item);
+});
+
+export const deleteMenuItemImage = asyncHandler(async (req: Request, res: Response) => {
+  const { tenantId, actorId } = requireTenantContext(req);
+  const { id } = idParamSchema.parse(req.params);
+  const item = await menuItemService.removeImage(tenantId, id, { actorId, ...actorMeta(req) });
+  sendSuccess(res, item);
+});
+
 export const deleteMenuItem = asyncHandler(async (req: Request, res: Response) => {
   const { tenantId, actorId } = requireTenantContext(req);
   const { id } = idParamSchema.parse(req.params);

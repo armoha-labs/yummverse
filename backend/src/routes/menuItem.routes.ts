@@ -3,7 +3,7 @@ import * as menuItemController from "../controllers/menuItem.controller.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 import { attachTenantContext } from "../middleware/tenant.middleware.js";
 import { requireRole } from "../middleware/role.middleware.js";
-import { spreadsheetUpload } from "../middleware/upload.middleware.js";
+import { spreadsheetUpload, imageUpload } from "../middleware/upload.middleware.js";
 
 export const menuItemRouter = Router();
 
@@ -18,6 +18,8 @@ menuItemRouter.get("/", menuItemController.listMenuItems);
 menuItemRouter.post("/", menuItemController.createMenuItem);
 menuItemRouter.put("/:id", menuItemController.updateMenuItem);
 menuItemRouter.delete("/:id", menuItemController.deleteMenuItem);
+menuItemRouter.post("/:id/image", imageUpload.single("file"), menuItemController.uploadMenuItemImage);
+menuItemRouter.delete("/:id/image", menuItemController.deleteMenuItemImage);
 menuItemRouter.patch("/:id/availability", menuItemController.setMenuItemAvailability);
 menuItemRouter.get("/:id/branch-overrides", menuItemController.getBranchOverrides);
 menuItemRouter.put("/:id/branch-overrides/:branchId", menuItemController.setBranchOverride);

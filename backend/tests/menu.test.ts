@@ -200,4 +200,64 @@ describe("branch menu availability overrides (§6A.4)", () => {
     const res = await request(app).get("/api/v1/public/menu");
     expect(res.status).toBe(401);
   });
+
+  it("uploads a menu item photo as base64 (primary) with a local-disk backup, replaces, removes, and surfaces it on the public menu", async () => {
+    const { app, accessToken } = await createActivatedTenantAdmin("menu-image");
+    const category = await request(app)
+      .post("/api/v1/admin/categories")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ name: "Coffee" });
+    const item = await request(app)
+      .post("/api/v1/admin/menu-items")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ categoryId: category.body.data._id, name: "Cappuccino", price: 150 });
+    const itemId = item.body.data._id;
+
+    const png = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64",
+    );
+
+    const rejectedType = await request(app)
+      .post(`/api/v1/admin/menu-items/${itemId}/image`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("file", Buffer.from("not an image"), { filename: "photo.txt", contentType: "text/plain" });
+    expect(rejectedType.status).toBe(400);
+
+    const uploaded = await request(app)
+      .post(`/api/v1/admin/menu-items/${itemId}/image`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("file", png, { filename: "photo.png", contentType: "image/png" });
+    expect(uploaded.status).toBe(200);
+    expect(uploaded.body.data.imageUrl).toMatch(/^data:image\/png;base64,/);
+    expect(uploaded.body.data.imageUrl).toContain(png.toString("base64"));
+    expect(uploaded.body.data.imageAssetId).toContain("menu-items/");
+    const firstAssetId = uploaded.body.data.imageAssetId;
+
+    const replaced = await request(app)
+      .post(`/api/v1/admin/menu-items/${itemId}/image`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("file", png, { filename: "photo2.png", contentType: "image/png" });
+    expect(replaced.status).toBe(200);
+    expect(replaced.body.data.imageAssetId).not.toBe(firstAssetId);
+
+    const table = await request(app)
+      .post("/api/v1/admin/tables")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ tableNumber: "1" });
+    const session = await request(app)
+      .post("/api/v1/customer/session")
+      .send({ qrToken: table.body.data.qrToken });
+    const publicMenu = await request(app)
+      .get("/api/v1/public/menu")
+      .set("Authorization", `Bearer ${session.body.data.sessionToken}`);
+    const cappuccino = publicMenu.body.data.find((i: { name: string }) => i.name === "Cappuccino");
+    expect(cappuccino.imageUrl).toBe(replaced.body.data.imageUrl);
+
+    const removed = await request(app)
+      .delete(`/api/v1/admin/menu-items/${itemId}/image`)
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(removed.status).toBe(200);
+    expect(removed.body.data.imageUrl).toBeFalsy();
+  });
 });

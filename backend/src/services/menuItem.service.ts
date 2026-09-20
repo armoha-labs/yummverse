@@ -5,6 +5,8 @@ import { branchMenuOverrideRepository } from "../repositories/branchMenuOverride
 import { auditService, type AuditContext } from "./audit.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { realtimeEvents } from "../sockets/realtimeEvents.js";
+import { getLocalDiskStorage, type UploadedFile } from "../storage/index.js";
+import { logger } from "../config/logger.js";
 
 type Actor = Omit<AuditContext, "actorType" | "actorId" | "tenantId"> & { actorId: string };
 
@@ -117,6 +119,81 @@ export const menuItemService = {
       userAgent: actor.userAgent,
     });
     realtimeEvents.menuAvailabilityChanged(tenantId, item);
+
+    return item;
+  },
+
+  async uploadImage(tenantId: string, menuItemId: string, file: UploadedFile, actor: Actor) {
+    const item = await menuItemRepository.findById(tenantId, menuItemId);
+    if (!item) throw ApiError.notFound("MENU_ITEM_NOT_FOUND", "Menu item not found.");
+
+    const previousAssetId = item.imageAssetId;
+
+    // Primary: base64 straight into the document, same pattern as the tenant logo — works
+    // identically to a URL, no external dependency, survives Render's ephemeral filesystem.
+    item.imageUrl = `data:${file.mimeType};base64,${file.buffer.toString("base64")}`;
+
+    // Secondary: best-effort local-disk backup copy — losing this doesn't lose the image,
+    // the base64 copy above is authoritative.
+    try {
+      const backup = await getLocalDiskStorage().upload(`menu-items/${tenantId}/${menuItemId}`, file);
+      item.imageAssetId = backup.assetId;
+    } catch (err) {
+      logger.warn({ err, tenantId, menuItemId }, "Failed to write local-disk backup copy of uploaded menu item image");
+      item.imageAssetId = undefined;
+    }
+
+    await item.save();
+
+    if (previousAssetId) {
+      await getLocalDiskStorage()
+        .delete(previousAssetId)
+        .catch((err: unknown) => {
+          logger.warn({ err, previousAssetId }, "Failed to delete replaced menu item image backup");
+        });
+    }
+
+    await auditService.record({
+      tenantId,
+      actorType: "USER",
+      actorId: actor.actorId,
+      action: "MENU_ITEM_UPDATED",
+      entityType: "MenuItem",
+      entityId: item._id,
+      ipAddress: actor.ipAddress,
+      userAgent: actor.userAgent,
+    });
+
+    return item;
+  },
+
+  async removeImage(tenantId: string, menuItemId: string, actor: Actor) {
+    const item = await menuItemRepository.findById(tenantId, menuItemId);
+    if (!item) throw ApiError.notFound("MENU_ITEM_NOT_FOUND", "Menu item not found.");
+
+    const assetId = item.imageAssetId;
+    item.imageUrl = undefined;
+    item.imageAssetId = undefined;
+    await item.save();
+
+    if (assetId) {
+      await getLocalDiskStorage()
+        .delete(assetId)
+        .catch((err: unknown) => {
+          logger.warn({ err, assetId }, "Failed to delete removed menu item image backup");
+        });
+    }
+
+    await auditService.record({
+      tenantId,
+      actorType: "USER",
+      actorId: actor.actorId,
+      action: "MENU_ITEM_UPDATED",
+      entityType: "MenuItem",
+      entityId: item._id,
+      ipAddress: actor.ipAddress,
+      userAgent: actor.userAgent,
+    });
 
     return item;
   },
