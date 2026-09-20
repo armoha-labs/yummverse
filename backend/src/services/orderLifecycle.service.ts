@@ -3,7 +3,7 @@ import { orderRepository } from "../repositories/order.repository.js";
 import { ApiError } from "../utils/ApiError.js";
 import { realtimeEvents } from "../sockets/realtimeEvents.js";
 import { notificationService } from "../notifications/NotificationService.js";
-import { tenantSettingsService } from "./tenantSettings.service.js";
+import { resolveKitchenEnabled } from "./orderCalculation.service.js";
 import { logger } from "../config/logger.js";
 
 function fireAndForget(promise: Promise<void>): void {
@@ -35,7 +35,14 @@ async function applyTransition(
   transitionKey: keyof typeof TRANSITIONS,
 ) {
   const transition = TRANSITIONS[transitionKey];
-  const kitchenEnabled = await tenantSettingsService.isKitchenEnabled(tenantId);
+
+  const order = await Order.findOne({ _id: orderId, tenantId, ...(branchId ? { branchId } : {}) });
+  if (!order) throw ApiError.notFound("ORDER_NOT_FOUND", "Order not found.");
+
+  // Resolved from the order's own branch (which may differ from the caller's, e.g. a Tenant
+  // Admin acting tenant-wide) so a branch-level override always governs orders placed there,
+  // even when the tenant-wide default disagrees.
+  const kitchenEnabled = await resolveKitchenEnabled(tenantId, order.branchId.toString());
 
   if (!kitchenEnabled && transitionKey !== "served") {
     throw ApiError.badRequest(
@@ -43,9 +50,6 @@ async function applyTransition(
       "Kitchen workflow is turned off for this café — orders can be marked Served directly.",
     );
   }
-
-  const order = await Order.findOne({ _id: orderId, tenantId, ...(branchId ? { branchId } : {}) });
-  if (!order) throw ApiError.notFound("ORDER_NOT_FOUND", "Order not found.");
 
   // With no kitchen workflow, an order never passes through ACCEPTED/PREPARING/READY — it
   // just sits in NEW until a waiter/admin serves it directly, so "served" has to be reachable

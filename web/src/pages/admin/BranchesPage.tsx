@@ -19,11 +19,15 @@ interface Branch {
   isDefault: boolean;
   status: "ACTIVE" | "INACTIVE";
   address?: { city?: string };
-  settings?: { payment?: { allowPayLater?: boolean; posCardEnabled?: boolean } };
+  settings?: {
+    payment?: { allowPayLater?: boolean; posCardEnabled?: boolean };
+    ordering?: { kitchenEnabled?: boolean; tableStatusEnabled?: boolean };
+  };
 }
 
 interface TenantDefaults {
   payment: { allowPayLater: boolean; posCardEnabled: boolean };
+  ordering: { kitchenEnabled: boolean; tableStatusEnabled: boolean };
 }
 
 const schema = z.object({
@@ -156,13 +160,25 @@ function BranchSettingsDialog({ branch, onClose }: { branch: Branch | null; onCl
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["branches"] }),
   });
 
+  const saveOrdering = useMutation({
+    mutationFn: (ordering: Partial<{ kitchenEnabled: boolean; tableStatusEnabled: boolean }>) =>
+      api.put(`/admin/branches/${branch!._id}`, { settings: { ordering } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["branches"] }),
+  });
+
   if (!branch) return null;
 
-  const tenantDefaults_ = tenantDefaults.data?.payment;
-  const allowPayLaterDefault = tenantDefaults_?.allowPayLater ?? false;
+  const paymentDefaults = tenantDefaults.data?.payment;
+  const allowPayLaterDefault = paymentDefaults?.allowPayLater ?? false;
   const allowPayLaterEffective = branch.settings?.payment?.allowPayLater ?? allowPayLaterDefault;
-  const posCardDefault = tenantDefaults_?.posCardEnabled ?? false;
+  const posCardDefault = paymentDefaults?.posCardEnabled ?? false;
   const posCardEffective = branch.settings?.payment?.posCardEnabled ?? posCardDefault;
+
+  const orderingDefaults = tenantDefaults.data?.ordering;
+  const kitchenDefault = orderingDefaults?.kitchenEnabled ?? true;
+  const kitchenEffective = branch.settings?.ordering?.kitchenEnabled ?? kitchenDefault;
+  const tableStatusDefault = orderingDefaults?.tableStatusEnabled ?? true;
+  const tableStatusEffective = branch.settings?.ordering?.tableStatusEnabled ?? tableStatusDefault;
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -173,6 +189,50 @@ function BranchSettingsDialog({ branch, onClose }: { branch: Branch | null; onCl
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <Label>Kitchen Workflow</Label>
+                <span className="text-xs text-text-muted">
+                  Off skips Accept/Preparing/Ready for orders placed at this branch — they go straight to Served.
+                </span>
+              </div>
+              <Switch
+                checked={kitchenEffective}
+                disabled={saveOrdering.isPending}
+                onCheckedChange={(v) => saveOrdering.mutate({ kitchenEnabled: v })}
+              />
+            </div>
+            {branch.settings?.ordering?.kitchenEnabled === undefined && (
+              <div className="text-xs text-text-muted">
+                Currently inheriting the tenant default ({kitchenDefault ? "on" : "off"}). Toggling sets an explicit
+                override for this branch.
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <Label>Table Status Tracking</Label>
+                <span className="text-xs text-text-muted">
+                  Off means tables at this branch never show an Available/Occupied status.
+                </span>
+              </div>
+              <Switch
+                checked={tableStatusEffective}
+                disabled={saveOrdering.isPending}
+                onCheckedChange={(v) => saveOrdering.mutate({ tableStatusEnabled: v })}
+              />
+            </div>
+            {branch.settings?.ordering?.tableStatusEnabled === undefined && (
+              <div className="text-xs text-text-muted">
+                Currently inheriting the tenant default ({tableStatusDefault ? "on" : "off"}). Toggling sets an
+                explicit override for this branch.
+              </div>
+            )}
+          </div>
+
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex flex-col">

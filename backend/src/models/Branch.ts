@@ -53,6 +53,15 @@ const branchSchema = new Schema(
           required: false,
           _id: false,
         },
+        // Same independently-optional-fields rule as payment above.
+        ordering: {
+          type: {
+            kitchenEnabled: { type: Boolean, required: false },
+            tableStatusEnabled: { type: Boolean, required: false },
+          },
+          required: false,
+          _id: false,
+        },
       },
       required: false,
       _id: false,

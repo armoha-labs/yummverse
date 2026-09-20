@@ -32,6 +32,7 @@ export const updateBranchSchema = z.object({
         .partial()
         .optional(),
       payment: z.object({ allowPayLater: z.boolean(), posCardEnabled: z.boolean() }).partial().optional(),
+      ordering: z.object({ kitchenEnabled: z.boolean(), tableStatusEnabled: z.boolean() }).partial().optional(),
     })
     .optional(),
 });

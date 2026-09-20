@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { api } from "@/lib/apiClient";
 import { useAuth, logout } from "@/lib/auth";
 import { useStaffBranding } from "@/lib/useTenantBranding";
+import { useKitchenSettings } from "@/lib/useBranchWorkflow";
 import { useNavigate } from "react-router-dom";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
 
@@ -52,7 +53,8 @@ export default function KitchenDisplayPage() {
     void registerForPushNotifications(api.post);
   }, []);
 
-  const kitchenEnabled = branding.data?.kitchenEnabled ?? true;
+  const kitchenSettings = useKitchenSettings();
+  const kitchenEnabled = kitchenSettings.data?.kitchenEnabled ?? true;
 
   const orders = useQuery({
     queryKey: ["kitchen-orders"],

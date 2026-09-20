@@ -128,6 +128,24 @@ export async function resolvePosCardEnabled(tenantId: string, branchId: string):
   return branch?.settings?.payment?.posCardEnabled ?? tenantSettings.payment?.posCardEnabled ?? false;
 }
 
+/** Same branch-overrides-tenant inheritance rule as above. */
+export async function resolveKitchenEnabled(tenantId: string, branchId: string): Promise<boolean> {
+  const [branch, tenantSettings] = await Promise.all([
+    branchRepository.findById(tenantId, branchId),
+    tenantSettingsService.getOrCreate(tenantId),
+  ]);
+  return branch?.settings?.ordering?.kitchenEnabled ?? tenantSettings.ordering?.kitchenEnabled ?? true;
+}
+
+/** Same branch-overrides-tenant inheritance rule as above. */
+export async function resolveTableStatusEnabled(tenantId: string, branchId: string): Promise<boolean> {
+  const [branch, tenantSettings] = await Promise.all([
+    branchRepository.findById(tenantId, branchId),
+    tenantSettingsService.getOrCreate(tenantId),
+  ]);
+  return branch?.settings?.ordering?.tableStatusEnabled ?? tenantSettings.ordering?.tableStatusEnabled ?? true;
+}
+
 function round2(value: number): number {
   return Math.round(value * 100) / 100;
 }

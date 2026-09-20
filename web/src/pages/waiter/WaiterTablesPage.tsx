@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/apiClient";
-import { useStaffBranding } from "@/lib/useTenantBranding";
+import { useWaiterSettings } from "@/lib/useBranchWorkflow";
 
 interface Table {
   _id: string;
@@ -10,8 +10,8 @@ interface Table {
 }
 
 export default function WaiterTablesPage() {
-  const branding = useStaffBranding();
-  const tableStatusEnabled = branding.data?.tableStatusEnabled ?? true;
+  const waiterSettings = useWaiterSettings();
+  const tableStatusEnabled = waiterSettings.data?.tableStatusEnabled ?? true;
 
   const tables = useQuery({
     queryKey: ["waiter-tables"],

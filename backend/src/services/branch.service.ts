@@ -77,6 +77,14 @@ export const branchService = {
         payment: { ...current, ...updates.settings.payment },
       };
     }
+    if (updates.settings?.ordering) {
+      // Same independent-fields rule as payment above.
+      const current = branch.settings?.ordering ?? {};
+      branch.settings = {
+        ...branch.settings,
+        ordering: { ...current, ...updates.settings.ordering },
+      };
+    }
     await branch.save();
 
     await auditService.record({

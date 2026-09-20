@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { orderLifecycleService } from "../services/orderLifecycle.service.js";
+import { resolveKitchenEnabled } from "../services/orderCalculation.service.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -35,4 +36,12 @@ export const markReady = asyncHandler(async (req: Request, res: Response) => {
   const { id } = idParamSchema.parse(req.params);
   const order = await orderLifecycleService.ready(tenantId, branchId, id);
   sendSuccess(res, order);
+});
+
+/** Lets the Kitchen Display screen show its "workflow is turned off" state — a Kitchen
+ * login is always locked to one branch (§6A.5), so no branchId param needed. */
+export const getKitchenSettings = asyncHandler(async (req: Request, res: Response) => {
+  const { tenantId, branchId } = requireKitchenContext(req);
+  const kitchenEnabled = await resolveKitchenEnabled(tenantId, branchId);
+  sendSuccess(res, { kitchenEnabled });
 });

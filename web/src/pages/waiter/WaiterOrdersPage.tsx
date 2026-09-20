@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useStaffBranding } from "@/lib/useTenantBranding";
+import { useWaiterSettings } from "@/lib/useBranchWorkflow";
 
 interface OrderItem {
   name: string;
@@ -29,8 +29,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function WaiterOrdersPage() {
   const queryClient = useQueryClient();
-  const branding = useStaffBranding();
-  const kitchenEnabled = branding.data?.kitchenEnabled ?? true;
+  const waiterSettings = useWaiterSettings();
+  const kitchenEnabled = waiterSettings.data?.kitchenEnabled ?? true;
 
   const orders = useQuery({
     queryKey: ["waiter-orders"],

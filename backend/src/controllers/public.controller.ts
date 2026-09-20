@@ -2,8 +2,7 @@ import type { Request, Response } from "express";
 import { resolveQrContext } from "../services/customerSession.service.js";
 import { resolveTenantBySlug } from "../tenant/context.js";
 import { publicMenuService } from "../services/publicMenu.service.js";
-import { resolveAllowPayLater } from "../services/orderCalculation.service.js";
-import { tenantSettingsService } from "../services/tenantSettings.service.js";
+import { resolveAllowPayLater, resolveKitchenEnabled } from "../services/orderCalculation.service.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -13,9 +12,10 @@ export const getTableByQrToken = asyncHandler(async (req: Request, res: Response
   const { qrToken } = qrTokenParamSchema.parse(req.params);
   const { table, branch, tenant } = await resolveQrContext(qrToken);
   const tenantId = tenant._id.toString();
+  const branchId = branch._id.toString();
   const [allowPayLater, kitchenEnabled] = await Promise.all([
-    resolveAllowPayLater(tenantId, branch._id.toString()),
-    tenantSettingsService.isKitchenEnabled(tenantId),
+    resolveAllowPayLater(tenantId, branchId),
+    resolveKitchenEnabled(tenantId, branchId),
   ]);
 
   sendSuccess(res, {
@@ -34,16 +34,12 @@ export const getTableByQrToken = asyncHandler(async (req: Request, res: Response
 export const getTenantBranding = asyncHandler(async (req: Request, res: Response) => {
   const { tenantSlug } = tenantSlugQuerySchema.parse(req.query);
   const tenant = await resolveTenantBySlug(tenantSlug);
-  const tenantId = tenant._id.toString();
-  const [kitchenEnabled, tableStatusEnabled] = await Promise.all([
-    tenantSettingsService.isKitchenEnabled(tenantId),
-    tenantSettingsService.isTableStatusEnabled(tenantId),
-  ]);
   // §32's staff login page renders "logo, name, colors" from this public lookup — name is
   // not sensitive (it's on the QR-landing response too) and is required for that branding.
-  // Also doubles as the one shared "café workflow settings" lookup for every staff screen
-  // (Waiter/Kitchen) that isn't allowed to call /tenant/settings (Tenant Admin only).
-  sendSuccess(res, { name: tenant.name, ...(tenant.branding ?? {}), kitchenEnabled, tableStatusEnabled });
+  // Branding only: kitchen/table-status workflow flags are branch-level (§6A.2), and this
+  // lookup has no branch context (it's keyed by tenant slug alone, reachable pre-login) — see
+  // GET /waiter/settings and GET /kitchen/settings for the branch-aware equivalent.
+  sendSuccess(res, { name: tenant.name, ...(tenant.branding ?? {}) });
 });
 
 // §22B: the client fetches the full menu once, right after the QR/table token resolves

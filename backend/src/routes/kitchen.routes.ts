@@ -8,6 +8,7 @@ export const kitchenRouter = Router();
 
 kitchenRouter.use(requireAuth, attachTenantContext, requireRole("KITCHEN"));
 
+kitchenRouter.get("/settings", kitchenController.getKitchenSettings);
 kitchenRouter.get("/orders", kitchenController.listKitchenOrders);
 kitchenRouter.post("/orders/:id/accept", kitchenController.acceptOrder);
 kitchenRouter.post("/orders/:id/preparing", kitchenController.startPreparing);

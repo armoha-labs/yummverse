@@ -8,6 +8,7 @@ export const waiterRouter = Router();
 
 waiterRouter.use(requireAuth, attachTenantContext, requireRole("WAITER"));
 
+waiterRouter.get("/settings", waiterController.getWaiterSettings);
 waiterRouter.get("/tables", waiterController.listWaiterTables);
 waiterRouter.get("/orders", waiterController.listWaiterOrders);
 waiterRouter.get("/orders/:id", waiterController.getWaiterOrder);
